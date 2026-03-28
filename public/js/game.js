@@ -211,68 +211,37 @@ const Game = {
     }
   },
 
-  MINIMAP_RADIUS: 5,  // 5 cells in each direction = 11x11 viewport
-
-  _renderMap() {
-    this._renderMinimap(document.getElementById('map-grid'), this.MINIMAP_RADIUS);
-  },
-
   /**
-   * Render a viewport-based minimap centered on the player.
-   * radius = number of cells visible in each direction from player.
+   * Build the sidebar map grid once. Called at game start.
    */
-  _renderMinimap(grid, radius) {
-    const viewSize = radius * 2 + 1;
-    grid.style.gridTemplateColumns = `repeat(${viewSize}, 1fr)`;
+  _renderMap() {
+    const grid = document.getElementById('map-grid');
+    grid.style.gridTemplateColumns = `repeat(${GameMap.SIZE}, 1fr)`;
     grid.innerHTML = '';
 
-    const px = Engine.playerPos.x;
-    const py = Engine.playerPos.y;
-
-    for (let vy = 0; vy < viewSize; vy++) {
-      for (let vx = 0; vx < viewSize; vx++) {
-        const x = px - radius + vx;
-        const y = py - radius + vy;
-        const cell = GameMap.getCell(x, y);
+    for (let y = 0; y < GameMap.SIZE; y++) {
+      for (let x = 0; x < GameMap.SIZE; x++) {
+        const cell = GameMap.grid[y][x];
         const div = document.createElement('div');
-
-        if (!cell) {
-          // Off the edge of the map — show as water/void
-          div.className = 'map-cell void';
-          grid.appendChild(div);
-          continue;
-        }
-
         div.className = `map-cell ${cell.type}`;
         div.dataset.x = x;
         div.dataset.y = y;
-        div.title = cell.explored ? cell.name : '???';
 
-        if (!cell.explored) {
-          div.style.opacity = '0.3';
-        }
-
-        // Key location markers — always visible as letters
+        // Key location markers — always visible
         const keyLetters = { bridge: 'B', dock: 'D', airstrip: 'A' };
         if (cell.keyLocation) {
           div.classList.add('key-location');
           div.innerHTML = `<span class="cell-icon">${keyLetters[cell.keyLocation]}</span>`;
         }
 
-        // Current position (center of viewport) — overrides key location icon
-        if (x === px && y === py) {
-          div.classList.add('current');
-          div.innerHTML = '<span class="cell-icon">@</span>';
-        }
-
         div.addEventListener('click', () => {
           if (Engine.playerLocation) return;
-          const dx = Math.abs(x - px);
-          const dy = Math.abs(y - py);
+          const dx = Math.abs(x - Engine.playerPos.x);
+          const dy = Math.abs(y - Engine.playerPos.y);
           if (dx + dy === 1) {
-            if (x > px) Engine.move('e');
-            else if (x < px) Engine.move('w');
-            else if (y > py) Engine.move('s');
+            if (x > Engine.playerPos.x) Engine.move('e');
+            else if (x < Engine.playerPos.x) Engine.move('w');
+            else if (y > Engine.playerPos.y) Engine.move('s');
             else Engine.move('n');
           }
         });
@@ -283,8 +252,34 @@ const Game = {
   },
 
   _updateMapHighlight() {
-    // Minimap viewport shifts with the player — just re-render
-    this._renderMap();
+    // Lightweight update — patch cells in place, don't rebuild DOM
+    const grid = document.getElementById('map-grid');
+    const cells = grid.children;
+    const keyLetters = { bridge: 'B', dock: 'D', airstrip: 'A' };
+
+    for (let i = 0; i < cells.length; i++) {
+      const div = cells[i];
+      const x = parseInt(div.dataset.x);
+      const y = parseInt(div.dataset.y);
+      const cell = GameMap.grid[y]?.[x];
+      if (!cell) continue;
+
+      // Update explored state
+      div.style.opacity = cell.explored ? '1' : '0.3';
+      div.title = cell.explored ? cell.name : '???';
+
+      // Update current position marker
+      const isCurrent = x === Engine.playerPos.x && y === Engine.playerPos.y;
+      div.classList.toggle('current', isCurrent);
+
+      if (isCurrent) {
+        div.innerHTML = '<span class="cell-icon">@</span>';
+      } else if (cell.keyLocation) {
+        div.innerHTML = `<span class="cell-icon">${keyLetters[cell.keyLocation]}</span>`;
+      } else {
+        div.innerHTML = '';
+      }
+    }
   },
 
   _updateNav() {

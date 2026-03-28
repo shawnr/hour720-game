@@ -195,7 +195,7 @@ const Combat = {
         hp: 10 + Math.floor(Math.random() * 12) + dayBonus,
         mh: 0,
         zombie: true,
-        weapon: { melee: 3 + Math.floor(dayBonus / 2), missile: 0 },
+        weapon: { melee: 5 + dayBonus, missile: 0 },
       });
     }
 

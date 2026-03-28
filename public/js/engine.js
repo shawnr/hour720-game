@@ -283,6 +283,28 @@ const Engine = {
       }
     }
 
+    // Zombies in the player's cell actively attack
+    if (cell && cell.zombies.length > 0) {
+      // Each zombie gets a chance to attack
+      for (let i = 0; i < cell.zombies.length; i++) {
+        const zombie = cell.zombies[i];
+        const result = Combat.resolveAttack(
+          zombie, this.character, { timeOfDay: this.timeOfDay }
+        );
+        if (result.hit) {
+          this.character.hp = result.defenderHp;
+          this.addEvent('combat', `A zombie attacks! ${result.message}`);
+          // Infection chance
+          if (Math.random() < 0.15 && !this.character.infected) {
+            this.character.infected = true;
+            this.addEvent('combat', 'You feel a burning at the wound site. You may be infected.');
+          }
+        }
+        // Only 1 zombie attacks per tick to avoid instant death
+        break;
+      }
+    }
+
     // Mental health decay from conditions
     if (this.timeOfDay === 'night') {
       this.character.mh = Math.max(0, this.character.mh - 0.1);
