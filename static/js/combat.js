@@ -133,9 +133,9 @@ const Combat = {
     const roll = Math.floor(Math.random() * 100);
     if (roll >= noiseRating) return null;
 
-    // 30% zombie, 10% hostile NPC (skip for archive), 60% red herring
+    // 45% zombie, 55% red herring — compressed days mean more encounters
     const typeRoll = Math.random();
-    if (typeRoll < 0.3) {
+    if (typeRoll < 0.45) {
       return { type: 'zombie', message: 'You hear shambling footsteps approaching...' };
     }
 
@@ -163,16 +163,17 @@ const Combat = {
    * Returns array of zombies or empty.
    */
   spawnZombies(cell, gameDay, isNight) {
-    // Base chance increases with day and at night
-    let chance = 10 + (gameDay * 5) + (isNight ? 20 : 0);
+    // Base chance increases with day and at night — tuned for 30-day game
+    let chance = 20 + (gameDay * 2) + (isNight ? 25 : 0);
 
     // Security reduces zombie spawns
     chance -= (cell.security || 0) * 5;
 
     // Urban areas get more zombies
-    if (cell.type === 'urban') chance += 10;
+    if (cell.type === 'urban') chance += 15;
+    if (cell.type === 'suburban') chance += 5;
 
-    chance = Math.max(5, Math.min(80, chance));
+    chance = Math.max(10, Math.min(85, chance));
 
     if (Math.random() * 100 > chance) return [];
 

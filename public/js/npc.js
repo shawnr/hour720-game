@@ -242,11 +242,14 @@ const NPCSystem = {
         // Death check
         if (npc.character.hp <= 0) {
           npc.alive = false;
-          events.push({
-            type: 'npc_death',
-            npc: npc,
-            message: `${npc.fullName} has died from ${npc.condition.name.toLowerCase()}.`,
-          });
+          // Only notify player about NPCs they've actually met
+          if (npc.met) {
+            events.push({
+              type: 'npc_death',
+              npc: npc,
+              message: `${npc.fullName} has died from ${npc.condition.name.toLowerCase()}.`,
+            });
+          }
           return;
         }
       }

@@ -185,7 +185,7 @@ img {
 
 .game-container {
   display: grid;
-  grid-template-columns: 280px 1fr 180px;
+  grid-template-columns: 300px 1fr 220px;
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
     "header header header"
@@ -277,6 +277,10 @@ img {
 .map-cell.suburban { background: #6a8a5e; }
 .map-cell.rural { background: #4a7a3e; }
 .map-cell.shore { background: #4a6a8a; }
+.map-cell.key-location {
+  font-weight: bold;
+  color: var(--text-yellow-bright);
+}
 .map-cell.current {
   outline: 2px solid var(--text-yellow);
   z-index: 1;
@@ -358,6 +362,23 @@ img {
 .inventory-list li {
   padding: 2px 0;
   border-bottom: 1px solid #444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+}
+
+.inventory-list .item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.inventory-list .item-actions {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Main content area: event log */
@@ -584,6 +605,26 @@ img {
 .radio-panel h3 {
   color: var(--text-yellow);
   margin-bottom: 0.5rem;
+}
+
+.radio-station-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.radio-station-bar button {
+  flex: 1;
+  padding: 0.4rem 0.75rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--accent-green);
+  color: var(--text-light);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.radio-station-bar button:hover {
+  background: var(--accent-green);
+  color: var(--bg-darker);
 }
 
 .radio-panel .station-name {

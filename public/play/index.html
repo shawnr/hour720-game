@@ -188,6 +188,12 @@
       <span class="legend-item"><span class="legend-swatch rural"></span> Rural</span>
       <span class="legend-item"><span class="legend-swatch shore"></span> Shore</span>
     </div>
+    <div class="map-legend" style="margin-top:0.25rem;">
+      <span class="legend-item"><strong style="color:var(--text-yellow-bright);">B</strong> Bridge</span>
+      <span class="legend-item"><strong style="color:var(--text-yellow-bright);">A</strong> Airstrip</span>
+      <span class="legend-item"><strong style="color:var(--text-yellow-bright);">D</strong> Dock</span>
+      <span class="legend-item"><strong style="color:var(--text-yellow);">@</strong> You</span>
+    </div>
     <button id="map-modal-close">Close</button>
   </div>
 </div>
@@ -196,6 +202,7 @@
 <div id="radio-overlay" class="radio-overlay hidden">
   <div class="radio-panel">
     <h3 id="radio-title">Radio</h3>
+    <div class="radio-station-bar" id="radio-station-bar"></div>
     <div class="station-name" id="radio-station"></div>
     <div class="broadcast-text" id="radio-text"></div>
     <button id="radio-close">Close</button>

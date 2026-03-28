@@ -8,9 +8,9 @@
 const Engine = {
 
   // Time constants
-  SECONDS_PER_DAY: 420,        // 7 real minutes = 1 game day
+  SECONDS_PER_DAY: 100,        // ~1.7 real minutes = 1 game day, 30 days = ~50 min
   HOURS_PER_DAY: 24,
-  GAME_DAYS: 7,
+  GAME_DAYS: 30,
 
   // Game state
   state: 'menu',  // menu | chargen | playing | paused | ended
@@ -22,7 +22,7 @@ const Engine = {
 
   // Player state
   character: null,
-  playerPos: { x: 13, y: 13 },  // Start in center
+  playerPos: { x: 4, y: 4 },  // Start in center
   playerLocation: null,        // Current building/room or null (outdoors)
 
   // Bridge is open only on Day 1
@@ -94,7 +94,7 @@ const Engine = {
     this.day = 1;
     this.gameTime = 0;
     this.bridgeOpen = true;
-    this.playerPos = { x: 13, y: 13 };
+    this.playerPos = { x: 4, y: 4 };
     this.playerLocation = null;
     this.eventLog = [];
     this.saveId = `save_${Date.now()}`;
@@ -200,8 +200,8 @@ const Engine = {
       this._onNewDay(newDay);
     }
 
-    // Periodic events (every ~15 seconds game time)
-    if (this.gameTime % 15 === 0) {
+    // Periodic events (every ~8 seconds game time — compressed days need more events)
+    if (this.gameTime % 8 === 0) {
       this._periodicTick();
     }
 
@@ -236,12 +236,14 @@ const Engine = {
       this.addEvent('radio', 'New radio broadcasts are available. Check your radio.');
     }
 
-    // Night warning
-    this.addEvent('system',
-      newDay >= 5
-        ? 'The streets feel more dangerous. Zombie activity is increasing.'
-        : 'Stay alert. Scavenge what you can.'
-    );
+    // Escalating warnings
+    if (newDay >= 25) {
+      this.addEvent('system', 'The island is overrun. Time is almost out.');
+    } else if (newDay >= 15) {
+      this.addEvent('system', 'The streets feel more dangerous. Zombie activity is increasing.');
+    } else {
+      this.addEvent('system', 'Stay alert. Scavenge what you can.');
+    }
   },
 
   _periodicTick() {
@@ -366,6 +368,12 @@ const Engine = {
     this.playerLocation = { type: 'building', building: bldg, room: null };
     this.stats.buildingsEntered++;
     this.addEvent('system', `You enter ${bldg.name}. ${bldg.desc}`);
+
+    if (bldg.hasBoat) {
+      this.addEvent('system',
+        'There\'s a boat here — and it looks seaworthy! You could escape the island from here.'
+      );
+    }
 
     if (bldg.rooms.length > 0) {
       this.addEvent('system',
@@ -606,6 +614,16 @@ const Engine = {
    * Attempt to escape via a route.
    */
   attemptEscape(route) {
+    // Boathouse escape — doesn't require a key location cell
+    if (route === 'boat') {
+      if (this.playerLocation?.building?.hasBoat) {
+        this._endGame('escaped', 'boat');
+        return true;
+      }
+      this.addEvent('system', 'There\'s no working boat here.');
+      return false;
+    }
+
     const cell = GameMap.getCell(this.playerPos.x, this.playerPos.y);
     if (!cell || cell.keyLocation !== route) {
       this.addEvent('system', 'You need to be at the escape point to attempt this.');

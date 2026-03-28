@@ -252,13 +252,14 @@ const Game = {
           div.style.opacity = '0.3';
         }
 
-        // Key location markers
-        if (cell.keyLocation && cell.explored) {
-          const icons = { bridge: '\u{1F309}', dock: '\u{26F5}', airstrip: '\u{2708}' };
-          div.innerHTML = `<span class="cell-icon">${icons[cell.keyLocation] || ''}</span>`;
+        // Key location markers — always visible as letters
+        const keyLetters = { bridge: 'B', dock: 'D', airstrip: 'A' };
+        if (cell.keyLocation) {
+          div.classList.add('key-location');
+          div.innerHTML = `<span class="cell-icon">${keyLetters[cell.keyLocation]}</span>`;
         }
 
-        // Current position (center of viewport)
+        // Current position (center of viewport) — overrides key location icon
         if (x === px && y === py) {
           div.classList.add('current');
           div.innerHTML = '<span class="cell-icon">@</span>';
@@ -302,11 +303,11 @@ const Game = {
       return;
     }
     list.innerHTML = inv.map((item, i) => `
-      <li title="${this._esc(item.desc)}">
-        ${this._esc(item.name)}
-        <span style="float:right;">
-          <button onclick="Game._useItem(${i})" style="font-size:0.7rem;padding:0 4px;cursor:pointer;background:var(--accent-green);border:1px solid var(--accent-brown);color:var(--bg-darker);margin-left:2px;">Use</button>
-          <button onclick="Game._dropItem(${i})" style="font-size:0.7rem;padding:0 4px;cursor:pointer;background:#665;border:1px solid var(--accent-brown);color:var(--text-light);margin-left:2px;">Drop</button>
+      <li>
+        <span class="item-name" title="${this._esc(item.name)} — ${this._esc(item.desc)}">${this._esc(item.name)}</span>
+        <span class="item-actions">
+          <button onclick="Game._useItem(${i})" style="font-size:0.7rem;padding:0 4px;cursor:pointer;background:var(--accent-green);border:1px solid var(--accent-brown);color:var(--bg-darker);">Use</button>
+          <button onclick="Game._dropItem(${i})" style="font-size:0.7rem;padding:0 4px;cursor:pointer;background:#665;border:1px solid var(--accent-brown);color:var(--text-light);">Drop</button>
         </span>
       </li>
     `).join('');
@@ -403,14 +404,15 @@ const Game = {
     document.getElementById('act-secure').disabled = false;
     document.getElementById('act-rest').disabled = false;
 
-    // Escape button — show contextually
+    // Escape button — visible at key locations or boathouses with boats
     const useBtn = document.getElementById('act-use');
-    if (isKeyLoc) {
+    const inBoatWithBoat = Engine.playerLocation?.building?.hasBoat;
+    if (isKeyLoc || inBoatWithBoat) {
       useBtn.textContent = 'Escape!';
       useBtn.disabled = false;
+      useBtn.style.display = '';
     } else {
-      useBtn.textContent = 'Use Item';
-      useBtn.disabled = Engine.character?.inventory.length === 0;
+      useBtn.style.display = 'none';
     }
   },
 
@@ -445,7 +447,7 @@ const Game = {
     const reportEl = document.getElementById('end-report');
 
     if (outcome === 'escaped') {
-      const routeNames = { bridge: 'the Mainland Bridge', dock: 'a boat from the harbor', airstrip: 'a plane from the airfield' };
+      const routeNames = { bridge: 'the Mainland Bridge', dock: 'a boat from the harbor', airstrip: 'a plane from the airfield', boat: 'a boat found in a boathouse' };
       outcomeEl.className = 'outcome escaped';
       outcomeEl.textContent = `You escaped New Hampton via ${routeNames[route] || 'unknown means'}.`;
     } else if (outcome === 'nuked') {
@@ -534,25 +536,56 @@ const Game = {
 
   // --- Radio overlay ---
 
+  _radioStation: 'KPTN',  // Currently tuned station
+
   _showRadio() {
     const overlay = document.getElementById('radio-overlay');
     const broadcasts = Radio.getAvailableBroadcasts(Engine.day);
 
-    // Show the most recent unheard, or latest
-    let broadcast = broadcasts.filter(b => !b.heard).pop();
-    if (!broadcast) broadcast = broadcasts[broadcasts.length - 1];
-    if (!broadcast) {
+    if (broadcasts.length === 0) {
       Engine.addEvent('system', 'Nothing but static on the radio.');
       return;
     }
 
-    document.getElementById('radio-title').textContent = `Day ${broadcast.day} Broadcast`;
-    document.getElementById('radio-station').textContent = broadcast.stationName;
-    document.getElementById('radio-text').innerHTML = this._esc(broadcast.text).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-
-    Radio.markHeard(broadcast.key);
+    this._renderRadioBroadcast(broadcasts);
     overlay.classList.remove('hidden');
     Engine.state = 'paused';
+  },
+
+  _renderRadioBroadcast(broadcasts) {
+    // Find latest broadcast for the current station
+    const stationBroadcasts = broadcasts.filter(b => b.station === this._radioStation);
+    // Pick most recent unheard, or just most recent
+    let broadcast = stationBroadcasts.filter(b => !b.heard).pop();
+    if (!broadcast) broadcast = stationBroadcasts[stationBroadcasts.length - 1];
+
+    // Station toggle buttons
+    const stationBar = document.getElementById('radio-station-bar');
+    if (stationBar) {
+      stationBar.innerHTML = ['KPTN', 'WHMP'].map(s => {
+        const active = s === this._radioStation ? ' style="background:var(--text-yellow);color:var(--bg-darker);"' : '';
+        const hasUnheard = broadcasts.some(b => b.station === s && !b.heard);
+        const dot = hasUnheard ? ' *' : '';
+        return `<button onclick="Game._tuneStation('${s}')"${active}>${s}${dot}</button>`;
+      }).join('');
+    }
+
+    if (broadcast) {
+      document.getElementById('radio-title').textContent = `Day ${broadcast.day} Broadcast`;
+      document.getElementById('radio-station').textContent = broadcast.stationName;
+      document.getElementById('radio-text').innerHTML = this._esc(broadcast.text).replace(/\r\n/g, '\n').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+      Radio.markHeard(broadcast.key);
+    } else {
+      document.getElementById('radio-title').textContent = 'No Signal';
+      document.getElementById('radio-station').textContent = this._radioStation;
+      document.getElementById('radio-text').textContent = 'Nothing but static on this frequency.';
+    }
+  },
+
+  _tuneStation(station) {
+    this._radioStation = station;
+    const broadcasts = Radio.getAvailableBroadcasts(Engine.day);
+    this._renderRadioBroadcast(broadcasts);
   },
 
   _hideRadio() {
@@ -581,10 +614,11 @@ const Game = {
           div.title = cell.name;
         }
 
-        // Key location markers
-        if (cell.keyLocation && cell.explored) {
-          const icons = { bridge: '\u{1F309}', dock: '\u{26F5}', airstrip: '\u{2708}' };
-          div.innerHTML = `<span class="cell-icon">${icons[cell.keyLocation] || ''}</span>`;
+        // Key location markers — always visible as letters
+        const keyLetters = { bridge: 'B', dock: 'D', airstrip: 'A' };
+        if (cell.keyLocation) {
+          div.classList.add('key-location');
+          div.innerHTML = `<span class="cell-icon">${keyLetters[cell.keyLocation]}</span>`;
         }
 
         // Current position
@@ -752,8 +786,8 @@ const Game = {
       const cell = GameMap.getCell(Engine.playerPos.x, Engine.playerPos.y);
       if (cell?.keyLocation) {
         Engine.attemptEscape(cell.keyLocation);
-      } else if (Engine.character.inventory.length > 0) {
-        Engine.useItem(0); // Use first item
+      } else if (Engine.playerLocation?.building?.hasBoat) {
+        Engine.attemptEscape('boat');
       }
     });
 

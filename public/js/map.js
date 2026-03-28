@@ -6,7 +6,7 @@
 
 const GameMap = {
 
-  SIZE: 27,
+  SIZE: 9,
   grid: [],        // 2D array of map cells
   buildings: {},   // keyed by "x,y" -> array of building objects
   rooms: {},       // keyed by building id -> array of room objects
@@ -52,9 +52,9 @@ const GameMap = {
 
   // Key locations for escape routes (placed deterministically)
   KEY_LOCATIONS: {
-    bridge:  { x: 0, y: 13 },   // West edge, midpoint
-    dock:    { x: 24, y: 23 },  // Southeast shore
-    airstrip: { x: 22, y: 3 },  // Northeast rural
+    bridge:  { x: 0, y: 4 },   // West edge — Day 1 only
+    dock:    { x: 8, y: 7 },   // Southeast shore
+    airstrip: { x: 7, y: 1 },  // Northeast rural
   },
 
   /**
@@ -85,8 +85,8 @@ const GameMap = {
       }
     }
 
-    // Step 2: Refine with neighbor influence (more passes for larger map)
-    for (let pass = 0; pass < 4; pass++) {
+    // Step 2: Refine with neighbor influence
+    for (let pass = 0; pass < 2; pass++) {
       for (let y = 1; y < this.SIZE - 1; y++) {
         for (let x = 1; x < this.SIZE - 1; x++) {
           this._refineCell(x, y);
@@ -111,22 +111,17 @@ const GameMap = {
   },
 
   _initialTerrain(x, y) {
-    // Shore on edges — 2-cell deep border for island feel
-    const edgeDist = Math.min(x, y, this.SIZE - 1 - x, this.SIZE - 1 - y);
-    if (edgeDist === 0) {
-      return 'shore';
+    // Shore on edges
+    if (x === 0 || y === 0 || x === this.SIZE - 1 || y === this.SIZE - 1) {
+      return Math.random() < 0.6 ? 'shore' : 'rural';
     }
-    if (edgeDist === 1) {
-      return Math.random() < 0.7 ? 'shore' : 'rural';
-    }
-    // Urban center — scaled for 27x27
+    // Urban center
     const cx = Math.floor(this.SIZE / 2);
     const cy = Math.floor(this.SIZE / 2);
     const dist = Math.abs(x - cx) + Math.abs(y - cy);
-    if (dist <= 3) return 'urban';
-    if (dist <= 7) return Math.random() < 0.6 ? 'suburban' : (Math.random() < 0.5 ? 'urban' : 'rural');
-    if (dist <= 12) return Math.random() < 0.5 ? 'rural' : 'suburban';
-    return Math.random() < 0.7 ? 'rural' : 'suburban';
+    if (dist <= 1) return 'urban';
+    if (dist <= 3) return Math.random() < 0.6 ? 'suburban' : (Math.random() < 0.5 ? 'urban' : 'rural');
+    return Math.random() < 0.5 ? 'rural' : 'suburban';
   },
 
   _refineCell(x, y) {
@@ -282,9 +277,12 @@ const GameMap = {
         id: `bldg_${x}_${y}_${i}`,
         name: this._resolveName(template.bldg_name),
         desc: this._resolveName(template.bldg_desc),
+        bldgType: template.bldg_type,
         light: template.bldg_light,
         cover: template.bldg_cover,
         security: template.bldg_sec,
+        // Boathouses have a 10% chance of containing a working boat
+        hasBoat: template.bldg_type === 'boathouse' && Math.random() < 0.10,
         rooms: [],
         zombies: [],
         npcs: [],
@@ -314,8 +312,11 @@ const GameMap = {
         roomTemplates = H720Data.rooms.filter(r => r.room_cat === 'vendor');
       }
 
+      // Shuffle templates and pick without replacement where possible
+      const shuffled = [...roomTemplates].sort(() => Math.random() - 0.5);
       for (let j = 0; j < numRooms; j++) {
-        const rt = roomTemplates[Math.floor(Math.random() * roomTemplates.length)];
+        // Use unique templates first, then cycle back if we need more rooms than templates
+        const rt = shuffled[j % shuffled.length];
         const room = {
           id: `${bldg.id}_room_${j}`,
           name: this._resolveName(rt.room_name),
