@@ -96,7 +96,7 @@ const Combat = {
     if (defender.zombie) modifier += 4;
 
     // Zombie attackers are relentless — they don't feint, they lunge
-    if (attacker.zombie) modifier += 6;
+    if (attacker.zombie) modifier += 10;
 
     // Roll d20 — must roll UNDER (10 + modifier)
     const roll = Math.floor(Math.random() * 20) + 1;

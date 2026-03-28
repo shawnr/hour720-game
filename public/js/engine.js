@@ -384,7 +384,9 @@ const Engine = {
 
     // Player death check
     if (this.character.hp <= 0) {
-      this._endGame(this.character.infected ? 'zombified' : 'died');
+      // Any death with zombies present or while infected = zombification
+      const zombiesPresent = cell && cell.zombies.length > 0;
+      this._endGame((this.character.infected || zombiesPresent) ? 'zombified' : 'died');
     }
     if (this.character.mh <= -5) {
       this._endGame('insane');
@@ -724,9 +726,9 @@ const Engine = {
       this.addEvent('combat', 'The zombie lunges at you but misses.');
     }
 
-    // Player death check
+    // Player death check — killed by zombie = zombified
     if (this.character.hp <= 0) {
-      this._endGame('died');
+      this._endGame('zombified');
     }
   },
 
