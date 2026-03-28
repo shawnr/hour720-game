@@ -489,6 +489,9 @@ const Game = {
     } else if (outcome === 'nuked') {
       outcomeEl.className = 'outcome nuked';
       outcomeEl.textContent = 'The government made its decision. New Hampton was sterilized.';
+    } else if (outcome === 'zombified') {
+      outcomeEl.className = 'outcome nuked';
+      outcomeEl.textContent = `${character.fullName} turned. They walk among the dead now.`;
     } else if (outcome === 'died') {
       outcomeEl.className = 'outcome nuked';
       outcomeEl.textContent = `${character.fullName} did not survive.`;
@@ -554,6 +557,14 @@ const Game = {
         `The blast was visible from the mainland. There were no survivors on the island.</p>` +
         `<p>The government classified the incident. The island was declared a restricted zone. ` +
         `The people of New Hampton were not mentioned in the official report.</p>`
+      );
+    } else if (outcome === 'zombified') {
+      paragraphs.push(
+        `<p>The infection took hold. ${character.genderLabel === 'Male' ? 'His' : 'Her'} eyes went glassy. ` +
+        `${character.genderLabel === 'Male' ? 'His' : 'Her'} movements became slow, deliberate, wrong. ` +
+        `${character.fullName} was gone. What stood up was something else entirely.</p>` +
+        `<p>${character.genderLabel === 'Male' ? 'He' : 'She'} still walks the streets of New Hampton. ` +
+        `If you return to the island, you might find ${character.genderLabel === 'Male' ? 'him' : 'her'}.</p>`
       );
     } else if (outcome === 'died') {
       paragraphs.push(

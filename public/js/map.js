@@ -132,6 +132,9 @@ const GameMap = {
     // Pre-populate zombies across the map — they're already here when you arrive
     this._populateZombies();
 
+    // Add zombified player characters from previous games
+    this._loadFallenPlayers();
+
     return this.grid;
   },
 
@@ -184,6 +187,26 @@ const GameMap = {
         }
       }
     }
+  },
+
+  /**
+   * Load zombified player characters from previous games.
+   */
+  _loadFallenPlayers() {
+    try {
+      const fallen = JSON.parse(localStorage.getItem('h720_fallen') || '[]');
+      fallen.forEach(f => {
+        const cell = this.getCell(f.x, f.y);
+        if (!cell) return;
+        cell.zombies.push({
+          id: `z_fallen_${f.name}`,
+          name: `${f.name} (zombified)`,
+          str: f.str, dex: f.dex, mt: 1, pt: f.pt,
+          hp: f.hp, mh: 0, zombie: true, fallen: true,
+          weapon: { melee: 6, missile: 0 },
+        });
+      });
+    } catch (e) { /* no fallen data */ }
   },
 
   _initialTerrain(x, y) {

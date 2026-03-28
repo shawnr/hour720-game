@@ -43,7 +43,7 @@
     "item_desc": "A sturdy shovel for digging or zombie whacking.",
     "item_melee": 5,
     "item_missle": 0,
-    "item_craft": 0,
+    "item_craft": 2,
     "item_health": 0,
     "item_scarcity": 3
   },
@@ -196,9 +196,9 @@
     "item_name": "Poisonous Mushrooms",
     "item_cat": "wild",
     "item_type": "food",
-    "item_desc": "It would be a bad idea to eat the poisonous mushrooms, right?",
-    "item_melee": 0,
-    "item_missle": 0,
+    "item_desc": "Toxic. Could be thrown at a zombie, or used in a desperate moment.",
+    "item_melee": 1,
+    "item_missle": 2,
     "item_craft": 0,
     "item_health": -1,
     "item_scarcity": 3
@@ -247,7 +247,7 @@
     "item_desc": "This is a gas-powered chainsaw with enough gas to go for a longer than usual time.",
     "item_melee": 10,
     "item_missle": 0,
-    "item_craft": 0,
+    "item_craft": 3,
     "item_health": 0,
     "item_scarcity": 2
   },
@@ -259,7 +259,7 @@
     "item_desc": "This oversized, fancy cake knife has a remarkably sharp edge.",
     "item_melee": 2,
     "item_missle": 0,
-    "item_craft": 0,
+    "item_craft": 1,
     "item_health": 0,
     "item_scarcity": 1
   },
@@ -283,7 +283,7 @@
     "item_desc": "This kitchen has remarkably large knives. Lucky you!",
     "item_melee": 2,
     "item_missle": 0,
-    "item_craft": 0,
+    "item_craft": 1,
     "item_health": 0,
     "item_scarcity": 3
   },
@@ -331,7 +331,7 @@
     "item_desc": "A large enough stone to use in your defense; or on the attack.",
     "item_melee": 4,
     "item_missle": 3,
-    "item_craft": 0,
+    "item_craft": 1,
     "item_health": 0,
     "item_scarcity": 3
   },
@@ -343,7 +343,7 @@
     "item_desc": "This piece of shattered glass is wicked and sharp.",
     "item_melee": 3,
     "item_missle": 0,
-    "item_craft": 0,
+    "item_craft": 1,
     "item_health": 0,
     "item_scarcity": 3
   },
@@ -355,7 +355,7 @@
     "item_desc": "This baseball bat was once connected to a child's dream of the major leagues.",
     "item_melee": 4,
     "item_missle": 0,
-    "item_craft": 0,
+    "item_craft": 1,
     "item_health": 0,
     "item_scarcity": 2
   },
@@ -367,7 +367,7 @@
     "item_desc": "The broken bottle's shattered edges cry out as fragments of light are torn to shreds.",
     "item_melee": 3,
     "item_missle": 1,
-    "item_craft": 0,
+    "item_craft": 1,
     "item_health": 0,
     "item_scarcity": 3
   },
@@ -436,10 +436,10 @@
     "item_name": "deflated basketball",
     "item_cat": "park",
     "item_type": "toy",
-    "item_desc": "There's no life left in this ball.",
+    "item_desc": "Flat, but the rubber could pad a barricade.",
     "item_melee": 0,
     "item_missle": 0,
-    "item_craft": 0,
+    "item_craft": 1,
     "item_health": 0,
     "item_scarcity": 1
   },
@@ -449,7 +449,7 @@
     "item_cat": "gym_school",
     "item_type": "toy",
     "item_desc": "The tiny sun around which America's game revolves.",
-    "item_melee": 0,
+    "item_melee": 1,
     "item_missle": 2,
     "item_craft": 0,
     "item_health": 0,

@@ -316,35 +316,76 @@ const Engine = {
     }
 
     // Zombies in the player's cell actively attack
-    if (cell && cell.zombies.length > 0) {
-      // Each zombie gets a chance to attack
-      for (let i = 0; i < cell.zombies.length; i++) {
-        const zombie = cell.zombies[i];
-        const result = Combat.resolveAttack(
-          zombie, this.character, { timeOfDay: this.timeOfDay }
+    if (cell && cell.zombies.length > 0 && !inSecuredBuilding) {
+      // One zombie attacks the player
+      const zombie = cell.zombies[0];
+      const result = Combat.resolveAttack(
+        zombie, this.character, { timeOfDay: this.timeOfDay }
+      );
+      if (result.hit) {
+        this.character.hp = result.defenderHp;
+        this.addEvent('combat', `A zombie attacks! ${result.message}`);
+        if (Math.random() < 0.15 && !this.character.infected) {
+          this.character.infected = true;
+          this.addEvent('combat', 'You feel a burning at the wound site. You may be infected.');
+        }
+      }
+
+      // CPCs fight back alongside the player
+      const cpcsHere = NPCSystem.cpcs.filter(c => c.alive && c.following);
+      cpcsHere.forEach(cpc => {
+        if (cell.zombies.length === 0) return;
+        const cpcWeapon = cpc.inventory.find(i => i.melee > 0) || { melee: 1, missile: 0, name: 'fists' };
+        const target = cell.zombies[Math.floor(Math.random() * cell.zombies.length)];
+        const cpcResult = Combat.resolveAttack(
+          { ...cpc.character, weapon: cpcWeapon }, target, { timeOfDay: this.timeOfDay }
         );
-        if (result.hit) {
-          this.character.hp = result.defenderHp;
-          this.addEvent('combat', `A zombie attacks! ${result.message}`);
-          // Infection chance
-          if (Math.random() < 0.15 && !this.character.infected) {
-            this.character.infected = true;
-            this.addEvent('combat', 'You feel a burning at the wound site. You may be infected.');
+        if (cpcResult.hit) {
+          target.hp = cpcResult.defenderHp;
+          this.addEvent('combat', `${cpc.fullName} attacks with ${cpcWeapon.name}! ${cpcResult.message}`);
+          if (target.hp <= 0) {
+            cell.zombies.splice(cell.zombies.indexOf(target), 1);
+            this.addEvent('combat', `${cpc.fullName} takes down a zombie!`);
+            this.stats.zombiesKilled++;
+          }
+        } else {
+          this.addEvent('combat', `${cpc.fullName} swings and misses.`);
+        }
+        // CPC can get hit back
+        if (cell.zombies.length > 0 && Math.random() < 0.3) {
+          const zHit = Combat.resolveAttack(cell.zombies[0], cpc.character, { timeOfDay: this.timeOfDay });
+          if (zHit.hit) {
+            cpc.character.hp = zHit.defenderHp;
+            this.addEvent('combat', `${cpc.fullName} takes ${zHit.damage} damage!`);
+            if (cpc.character.hp <= 0) {
+              cpc.alive = false;
+              this.addEvent('combat', `${cpc.fullName} has fallen!`);
+            }
           }
         }
-        // Only 1 zombie attacks per tick to avoid instant death
-        break;
-      }
+      });
     }
 
-    // Mental health decay from conditions
+    // Infection progression — infected players deteriorate
+    if (this.character.infected) {
+      this.character.hp = Math.max(0, this.character.hp - 0.3);
+      this.character.mh = Math.max(0, this.character.mh - 0.2);
+    }
+
+    // Mental health decay at night
     if (this.timeOfDay === 'night') {
       this.character.mh = Math.max(0, this.character.mh - 0.1);
     }
 
+    // Zombie HP decay — they lose health each tick (need brains)
+    if (cell) {
+      cell.zombies.forEach(z => { z.hp = Math.max(0, z.hp - 0.1); });
+      cell.zombies = cell.zombies.filter(z => z.hp > 0);
+    }
+
     // Player death check
     if (this.character.hp <= 0) {
-      this._endGame('died');
+      this._endGame(this.character.infected ? 'zombified' : 'died');
     }
     if (this.character.mh <= -5) {
       this._endGame('insane');
@@ -625,12 +666,17 @@ const Engine = {
     }
 
     const zombie = cell.zombies[zombieIdx];
-    const weapon = this.character.inventory.find(i => i.melee > 0) || { melee: 1, missile: 0, name: 'fists' };
-    this._addNoise(this.NOISE_COMBAT);
+    // Prefer ranged weapon (gun) if available, otherwise melee
+    const gun = this.character.inventory.find(i => i.missile > 2);
+    const meleeWeapon = this.character.inventory.find(i => i.melee > 0);
+    const weapon = gun || meleeWeapon || { melee: 1, missile: 0, name: 'fists' };
+    const isGun = gun && weapon === gun;
+    this._addNoise(isGun ? this.NOISE_COMBAT * 2 : this.NOISE_COMBAT); // Guns are LOUD
 
-    // Player attacks
+    // Player attacks — guns use missile stat, melee uses melee stat
+    const attackWeapon = isGun ? { melee: weapon.missile, missile: weapon.missile } : weapon;
     const playerResult = Combat.resolveAttack(
-      { ...this.character, weapon },
+      { ...this.character, weapon: attackWeapon },
       zombie,
       { timeOfDay: this.timeOfDay, cover: cell.cover || 0 }
     );
@@ -638,7 +684,7 @@ const Engine = {
     if (playerResult.hit) {
       zombie.hp = playerResult.defenderHp;
       this.addEvent('combat',
-        `You attack the zombie with ${weapon.name}. ${playerResult.message}`
+        `You ${isGun ? 'shoot' : 'attack'} the zombie with ${weapon.name}. ${playerResult.message}`
       );
       if (zombie.hp <= 0) {
         cell.zombies.splice(zombieIdx, 1);
@@ -647,7 +693,16 @@ const Engine = {
         return;
       }
     } else {
-      this.addEvent('combat', `You swing at the zombie. ${playerResult.message}`);
+      this.addEvent('combat', `You ${isGun ? 'fire at' : 'swing at'} the zombie. ${playerResult.message}`);
+    }
+
+    // Guns are single-use — consumed after firing
+    if (isGun) {
+      const gunIdx = this.character.inventory.indexOf(weapon);
+      if (gunIdx >= 0) {
+        this.character.inventory.splice(gunIdx, 1);
+        this.addEvent('system', `The ${weapon.name} is spent. You toss it aside.`);
+      }
     }
 
     // Zombie counterattack
@@ -837,6 +892,30 @@ const Engine = {
     this.stopLoop();
     this.stats.daysSurvived = this.day;
     this.stats.escapeRoute = route || null;
+
+    // If zombified, spawn a zombie version on the map and persist to localStorage
+    if (outcome === 'zombified') {
+      const c = this.character;
+      const zombieVersion = {
+        name: c.fullName,
+        profession: c.profession,
+        age: c.age,
+        x: this.playerPos.x,
+        y: this.playerPos.y,
+        hp: c.maxHp,
+        str: Math.floor(c.str * 0.8),
+        dex: Math.floor(c.dex * 0.6),
+        pt: Math.floor(c.pt * 0.8),
+        date: new Date().toISOString(),
+      };
+      // Store in localStorage so they appear in future games
+      try {
+        const fallen = JSON.parse(localStorage.getItem('h720_fallen') || '[]');
+        fallen.push(zombieVersion);
+        if (fallen.length > 20) fallen.shift(); // Keep last 20
+        localStorage.setItem('h720_fallen', JSON.stringify(fallen));
+      } catch (e) { /* localStorage full */ }
+    }
 
     // Save final state
     this._autoSave();
