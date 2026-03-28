@@ -287,12 +287,11 @@ const Engine = {
 
     // Random event check at current location — driven by noise + day escalation
     const cell = GameMap.getCell(this.playerPos.x, this.playerPos.y);
+    const inSecuredBuilding = this.playerLocation?.building?.security >= 4;
     if (cell) {
       const locationMod = this.playerLocation ? -5 : 5; // Inside is quieter
       const effectiveNoise = Math.max(5, this.noise + (this.day * 3) + locationMod);
       const event = Combat.checkRandomEvent(effectiveNoise);
-      // Fully secured buildings (level 4) block zombie spawns inside
-      const inSecuredBuilding = this.playerLocation?.building?.security >= 4;
       if (event) {
         if (event.type === 'zombie' && !inSecuredBuilding) {
           const zombies = Combat.spawnZombies(cell, this.day, this.timeOfDay === 'night');
