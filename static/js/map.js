@@ -352,8 +352,8 @@ const GameMap = {
       const template = weighted[Math.floor(Math.random() * weighted.length)];
       items.push({
         id: template.item_id,
-        name: template.item_name,
-        desc: template.item_desc,
+        name: this._resolveName(template.item_name),
+        desc: this._resolveName(template.item_desc),
         melee: template.item_melee,
         missile: template.item_missle,
         health: template.item_health,

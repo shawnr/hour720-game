@@ -489,8 +489,8 @@ const Engine = {
     const template = pool[Math.floor(Math.random() * pool.length)];
     return {
       id: template.item_id,
-      name: template.item_name,
-      desc: template.item_desc,
+      name: GameMap._resolveName(template.item_name),
+      desc: GameMap._resolveName(template.item_desc),
       melee: template.item_melee,
       missile: template.item_missle,
       health: template.item_health,

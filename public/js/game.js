@@ -597,7 +597,9 @@ const Game = {
     if (broadcast) {
       document.getElementById('radio-title').textContent = `Day ${broadcast.day} Broadcast`;
       document.getElementById('radio-station').textContent = broadcast.stationName;
-      document.getElementById('radio-text').innerHTML = this._esc(broadcast.text).replace(/\r\n/g, '\n').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+      const escaped = this._esc(broadcast.text).replace(/\r\n/g, '\n');
+      const paragraphs = escaped.split(/\n\n+/).filter(p => p.trim());
+      document.getElementById('radio-text').innerHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
       Radio.markHeard(broadcast.key);
     } else {
       document.getElementById('radio-title').textContent = 'No Signal';

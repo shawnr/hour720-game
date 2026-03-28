@@ -638,6 +638,14 @@ img {
   margin-bottom: 1rem;
 }
 
+.radio-panel .broadcast-text p {
+  margin-bottom: 1rem;
+}
+
+.radio-panel .broadcast-text p:last-child {
+  margin-bottom: 0;
+}
+
 .radio-panel button {
   background: var(--accent-green);
   color: var(--bg-darker);

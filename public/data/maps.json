@@ -8618,7 +8618,7 @@
     "map_security": 0,
     "map_maxSec": 2,
     "map_desc": "Where finicky eaters go to graze.",
-    "map_name": "KingÂ’s River Foods",
+    "map_name": "King's River Foods",
     "map_cover": 10,
     "map_light": 10,
     "map_zoom": "bldg"
@@ -13354,7 +13354,7 @@
     "map_security": 0,
     "map_maxSec": 0,
     "map_desc": "Isn't the view lovely from the sandy shoreline?",
-    "map_name": "KingÂ’s River Beach",
+    "map_name": "King's River Beach",
     "map_cover": 5,
     "map_light": 10,
     "map_zoom": "block"
@@ -19578,7 +19578,7 @@
     "map_security": 0,
     "map_maxSec": 2,
     "map_desc": "Where finicky eaters go to graze.",
-    "map_name": "KingÂ’s River Foods",
+    "map_name": "King's River Foods",
     "map_cover": 10,
     "map_light": 10,
     "map_zoom": "bldg"
@@ -31210,7 +31210,7 @@
     "map_security": 0,
     "map_maxSec": 10,
     "map_desc": "Four solid walls, one solid celing sealing in the dead.",
-    "map_name": "KingÂ’s River Mausoleum",
+    "map_name": "King's River Mausoleum",
     "map_cover": 1,
     "map_light": 1,
     "map_zoom": "bldg"
@@ -39098,7 +39098,7 @@
     "map_security": 0,
     "map_maxSec": 10,
     "map_desc": "Four solid walls, one solid celing sealing in the dead.",
-    "map_name": "KingÂ’s River Mausoleum",
+    "map_name": "King's River Mausoleum",
     "map_cover": 1,
     "map_light": 1,
     "map_zoom": "bldg"
@@ -40042,7 +40042,7 @@
     "map_security": 0,
     "map_maxSec": 0,
     "map_desc": "Isn't the view lovely from the sandy shoreline?",
-    "map_name": "KingÂ’s River Beach",
+    "map_name": "King's River Beach",
     "map_cover": 5,
     "map_light": 10,
     "map_zoom": "block"
