@@ -198,15 +198,38 @@ const Game = {
     }
   },
 
+  MINIMAP_RADIUS: 5,  // 5 cells in each direction = 11x11 viewport
+
   _renderMap() {
-    const grid = document.getElementById('map-grid');
-    grid.style.gridTemplateColumns = `repeat(${GameMap.SIZE}, 1fr)`;
+    this._renderMinimap(document.getElementById('map-grid'), this.MINIMAP_RADIUS);
+  },
+
+  /**
+   * Render a viewport-based minimap centered on the player.
+   * radius = number of cells visible in each direction from player.
+   */
+  _renderMinimap(grid, radius) {
+    const viewSize = radius * 2 + 1;
+    grid.style.gridTemplateColumns = `repeat(${viewSize}, 1fr)`;
     grid.innerHTML = '';
 
-    for (let y = 0; y < GameMap.SIZE; y++) {
-      for (let x = 0; x < GameMap.SIZE; x++) {
-        const cell = GameMap.grid[y][x];
+    const px = Engine.playerPos.x;
+    const py = Engine.playerPos.y;
+
+    for (let vy = 0; vy < viewSize; vy++) {
+      for (let vx = 0; vx < viewSize; vx++) {
+        const x = px - radius + vx;
+        const y = py - radius + vy;
+        const cell = GameMap.getCell(x, y);
         const div = document.createElement('div');
+
+        if (!cell) {
+          // Off the edge of the map — show as water/void
+          div.className = 'map-cell void';
+          grid.appendChild(div);
+          continue;
+        }
+
         div.className = `map-cell ${cell.type}`;
         div.dataset.x = x;
         div.dataset.y = y;
@@ -222,22 +245,20 @@ const Game = {
           div.innerHTML = `<span class="cell-icon">${icons[cell.keyLocation] || ''}</span>`;
         }
 
-        // Current position
-        if (x === Engine.playerPos.x && y === Engine.playerPos.y) {
+        // Current position (center of viewport)
+        if (x === px && y === py) {
           div.classList.add('current');
           div.innerHTML = '<span class="cell-icon">@</span>';
         }
 
         div.addEventListener('click', () => {
-          // Can't move on the map while inside a building
           if (Engine.playerLocation) return;
-          // Click to move if adjacent
-          const dx = Math.abs(x - Engine.playerPos.x);
-          const dy = Math.abs(y - Engine.playerPos.y);
+          const dx = Math.abs(x - px);
+          const dy = Math.abs(y - py);
           if (dx + dy === 1) {
-            if (x > Engine.playerPos.x) Engine.move('e');
-            else if (x < Engine.playerPos.x) Engine.move('w');
-            else if (y > Engine.playerPos.y) Engine.move('s');
+            if (x > px) Engine.move('e');
+            else if (x < px) Engine.move('w');
+            else if (y > py) Engine.move('s');
             else Engine.move('n');
           }
         });
@@ -248,28 +269,8 @@ const Game = {
   },
 
   _updateMapHighlight() {
-    const cells = document.querySelectorAll('.map-cell');
-    cells.forEach(div => {
-      const x = parseInt(div.dataset.x);
-      const y = parseInt(div.dataset.y);
-      const cell = GameMap.grid[y]?.[x];
-
-      div.classList.toggle('current', x === Engine.playerPos.x && y === Engine.playerPos.y);
-
-      if (x === Engine.playerPos.x && y === Engine.playerPos.y) {
-        div.innerHTML = '<span class="cell-icon">@</span>';
-      } else if (cell?.keyLocation && cell.explored) {
-        const icons = { bridge: '\u{1F309}', dock: '\u{26F5}', airstrip: '\u{2708}' };
-        div.innerHTML = `<span class="cell-icon">${icons[cell.keyLocation] || ''}</span>`;
-      } else {
-        div.innerHTML = '';
-      }
-
-      if (cell) {
-        div.title = cell.explored ? cell.name : '???';
-        div.style.opacity = cell.explored ? '1' : '0.3';
-      }
-    });
+    // Minimap viewport shifts with the player — just re-render
+    this._renderMap();
   },
 
   _updateNav() {

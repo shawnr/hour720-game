@@ -251,7 +251,7 @@ img {
 
 .map-grid {
   display: grid;
-  gap: 0px;
+  gap: 1px;
   background: #555;
   border: 1px solid var(--accent-brown);
 }
@@ -261,17 +261,18 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.35rem;
+  font-size: 0.6rem;
   cursor: pointer;
   transition: background 0.15s;
   position: relative;
 }
 
 .map-cell .cell-icon {
-  font-size: 0.45rem;
+  font-size: 0.7rem;
   line-height: 1;
 }
 
+.map-cell.void { background: #2a3040; cursor: default; }
 .map-cell.urban { background: #8a7e6b; }
 .map-cell.suburban { background: #6a8a5e; }
 .map-cell.rural { background: #4a7a3e; }

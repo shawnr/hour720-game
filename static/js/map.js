@@ -292,19 +292,26 @@ const GameMap = {
 
       // Generate rooms for this building
       const numRooms = Math.max(1, Math.min(template.bldg_numRoom, template.bldg_max || 5));
-      // Match rooms by building type → room category
-      const bldgType = template.bldg_type;
-      let roomTemplates = H720Data.rooms.filter(r => r.room_cat === bldgType);
-      // Fallback: if no matching rooms (e.g. office, vendor, gas station),
-      // use a generic mix of bank (waiting areas) and house (kitchens, etc.)
+      // Match rooms by building type → room category using explicit mapping
+      const ROOM_MATCH = {
+        'restroom':    ['restroom'],
+        'park tools':  ['restroom'],
+        'mall':        ['mall', 'grocery'],
+        'maus':        [],
+        'house':       ['house'],
+        'bank':        ['bank'],
+        'boathouse':   ['boathouse'],
+        'office':      ['bank'],
+        'vendor':      ['grocery'],
+        'school':      ['school'],
+        'grocery':     ['grocery'],
+        'gas station': ['restroom', 'grocery'],
+      };
+      const allowedCats = ROOM_MATCH[template.bldg_type] || [];
+      let roomTemplates = H720Data.rooms.filter(r => allowedCats.includes(r.room_cat));
+      // Final fallback: if still nothing, use restroom + bank as generic interiors
       if (roomTemplates.length === 0) {
-        roomTemplates = H720Data.rooms.filter(r =>
-          ['bank', 'restroom'].includes(r.room_cat)
-        );
-      }
-      // Final fallback: if still nothing, use all rooms
-      if (roomTemplates.length === 0) {
-        roomTemplates = H720Data.rooms;
+        roomTemplates = H720Data.rooms.filter(r => ['restroom', 'bank'].includes(r.room_cat));
       }
 
       for (let j = 0; j < numRooms; j++) {
