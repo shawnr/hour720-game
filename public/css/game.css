@@ -55,6 +55,125 @@
   100% { opacity: 0; }
 }
 
+/* Noise indicator in header */
+.noise-indicator {
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 2px;
+  margin-left: 0.5rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.noise-silent { color: var(--accent-green); }
+.noise-low { color: var(--text-yellow-soft); }
+.noise-med { color: var(--text-yellow-bright); }
+.noise-high { color: var(--danger-red); font-weight: bold; }
+
+/* Room navigation links */
+.room-link {
+  color: var(--text-yellow-pale);
+  font-weight: bold;
+  text-decoration: none;
+  padding: 2px 6px;
+  display: inline-block;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+.room-link:hover {
+  color: var(--text-yellow);
+  border-color: var(--accent-green);
+  background: rgba(140, 155, 120, 0.15);
+}
+
+/* Map modal overlay */
+.map-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.map-modal-panel {
+  background: var(--bg-card);
+  border: 2px solid var(--accent-green);
+  border-radius: 4px;
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 90%;
+}
+
+.map-modal-panel h3 {
+  color: var(--text-yellow);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.map-modal-grid {
+  display: grid;
+  gap: 2px;
+  background: #555;
+  border: 1px solid var(--accent-brown);
+  margin-bottom: 1rem;
+}
+
+.map-modal-grid .map-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.map-modal-grid .map-cell .cell-icon {
+  font-size: 1.2rem;
+}
+
+.map-legend {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+.legend-swatch.urban { background: #8a7e6b; }
+.legend-swatch.suburban { background: #6a8a5e; }
+.legend-swatch.rural { background: #4a7a3e; }
+.legend-swatch.shore { background: #4a6a8a; }
+
+.map-modal-panel button {
+  display: block;
+  margin: 0 auto;
+  background: var(--accent-green);
+  color: var(--bg-darker);
+  border: 1px solid var(--accent-brown);
+  padding: 0.5rem 1.5rem;
+  font-family: var(--font-main);
+  cursor: pointer;
+}
+
 /* Action cooldown indicator */
 .action-bar button.cooldown {
   position: relative;

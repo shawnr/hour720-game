@@ -28,6 +28,15 @@ const Engine = {
   // Bridge is open only on Day 1
   bridgeOpen: true,
 
+  // Noise tracking — higher = more zombie attention
+  noise: 0,
+  NOISE_DECAY: 2,      // Noise decays per tick cycle
+  NOISE_MOVE: 8,
+  NOISE_SEARCH: 5,
+  NOISE_COMBAT: 15,
+  NOISE_REST: -10,
+  NOISE_SECURE: 3,
+
   // Game stats for end report
   stats: {
     zombiesKilled: 0,
@@ -140,6 +149,7 @@ const Engine = {
     this.eventLog = saveData.eventLog || [];
     this.saveId = saveData.id;
     this.stats = saveData.stats || this.stats;
+    this.noise = saveData.noise || 0;
 
     // Restore map
     GameMap.grid = saveData.map;
@@ -242,12 +252,15 @@ const Engine = {
       if (e.type === 'npc_death') this.stats.npcsDied++;
     });
 
-    // Random event check at current location
+    // Noise decays over time
+    this._addNoise(-this.NOISE_DECAY);
+
+    // Random event check at current location — driven by noise + day escalation
     const cell = GameMap.getCell(this.playerPos.x, this.playerPos.y);
     if (cell) {
-      const baseNoise = this.playerLocation ? 15 : 25; // Inside is quieter
-      const noise = baseNoise + (this.day * 3);
-      const event = Combat.checkRandomEvent(noise);
+      const locationMod = this.playerLocation ? -5 : 5; // Inside is quieter
+      const effectiveNoise = Math.max(5, this.noise + (this.day * 3) + locationMod);
+      const event = Combat.checkRandomEvent(effectiveNoise);
       if (event) {
         if (event.type === 'zombie') {
           const zombies = Combat.spawnZombies(cell, this.day, this.timeOfDay === 'night');
@@ -302,6 +315,7 @@ const Engine = {
     this.playerLocation = null; // Back outdoors
     cell.explored = true;
     this.stats.blocksExplored++;
+    this._addNoise(this.NOISE_MOVE);
 
     this.addEvent('system', `You move to ${cell.name}. ${cell.desc}`);
 
@@ -402,9 +416,56 @@ const Engine = {
       return found;
     }
 
-    // Outdoor search
-    this.addEvent('system', 'You look around but find nothing in the open.');
+    // Building lobby search — check hallways and common areas
+    if (this.playerLocation?.building) {
+      this.addEvent('system', 'You look around the main area...');
+      // 25% chance to find something lying around in the lobby
+      if (Math.random() < 0.25) {
+        const item = this._randomScavengeItem();
+        if (item) {
+          this.addEvent('system', `Found: ${item.name} — ${item.desc}`);
+          this.stats.itemsFound++;
+          return [item];
+        }
+      }
+      this.addEvent('system', 'Nothing here. Try searching individual rooms.');
+      return [];
+    }
+
+    // Outdoor search — occasionally find something
+    this._addNoise(this.NOISE_SEARCH);
+    this.addEvent('system', 'You search the area...');
+    const cell = GameMap.getCell(this.playerPos.x, this.playerPos.y);
+    // Chance scales with terrain type — urban has more loot lying around
+    const outdoorChance = { urban: 0.20, suburban: 0.15, rural: 0.10, shore: 0.08 };
+    const chance = outdoorChance[cell?.type] || 0.10;
+    if (Math.random() < chance) {
+      const item = this._randomScavengeItem();
+      if (item) {
+        this.addEvent('system', `Found: ${item.name} — ${item.desc}`);
+        this.stats.itemsFound++;
+        return [item];
+      }
+    }
+    this.addEvent('system', 'You don\'t find anything useful.');
     return [];
+  },
+
+  _randomScavengeItem() {
+    if (!H720Data.items || H720Data.items.length === 0) return null;
+    // Favor common items (low scarcity) for outdoor/lobby finds
+    const common = H720Data.items.filter(i => i.item_scarcity <= 5);
+    const pool = common.length > 0 ? common : H720Data.items;
+    const template = pool[Math.floor(Math.random() * pool.length)];
+    return {
+      id: template.item_id,
+      name: template.item_name,
+      desc: template.item_desc,
+      melee: template.item_melee,
+      missile: template.item_missle,
+      health: template.item_health,
+      craft: template.item_craft,
+    };
   },
 
   takeItem(item) {
@@ -456,6 +517,7 @@ const Engine = {
 
     const zombie = cell.zombies[zombieIdx];
     const weapon = this.character.inventory.find(i => i.melee > 0) || { melee: 1, missile: 0, name: 'fists' };
+    this._addNoise(this.NOISE_COMBAT);
 
     // Player attacks
     const playerResult = Combat.resolveAttack(
@@ -509,6 +571,7 @@ const Engine = {
     const cell = GameMap.getCell(this.playerPos.x, this.playerPos.y);
     if (!cell) return;
 
+    this._addNoise(this.NOISE_SECURE);
     if (this.playerLocation?.building) {
       const bldg = this.playerLocation.building;
       bldg.security = Math.min(10, (bldg.security || 0) + 2);
@@ -527,6 +590,7 @@ const Engine = {
     this.character.hp = Math.min(this.character.maxHp, this.character.hp + 2);
     this.character.mh = Math.min(this.character.maxMh, this.character.mh + 1);
     this.character.sleep = Math.max(0, this.character.sleep - 1);
+    this._addNoise(this.NOISE_REST);
     this.addEvent('system', 'You rest for a while. (+2 HP, +1 MH)');
   },
 
@@ -631,6 +695,7 @@ const Engine = {
       gameTime: this.gameTime,
       bridgeOpen: this.bridgeOpen,
       playerPos: this.playerPos,
+      noise: this.noise,
       map: GameMap.grid,
       buildings: GameMap.buildings,
       npcs: NPCSystem.npcs,
@@ -643,6 +708,20 @@ const Engine = {
 
   _autoSave() {
     SaveSystem.autoSave(this.getState());
+  },
+
+  _addNoise(amount) {
+    this.noise = Math.max(0, Math.min(100, this.noise + amount));
+  },
+
+  /**
+   * Get noise level label for UI display.
+   */
+  get noiseLevel() {
+    if (this.noise >= 60) return { label: 'Loud', css: 'noise-high' };
+    if (this.noise >= 35) return { label: 'Noisy', css: 'noise-med' };
+    if (this.noise >= 15) return { label: 'Quiet', css: 'noise-low' };
+    return { label: 'Silent', css: 'noise-silent' };
   },
 
   _articleFor(word) {

@@ -112,6 +112,12 @@ const Game = {
     document.getElementById('game-day').textContent = `Day ${Engine.day}`;
     document.getElementById('game-time').textContent = Engine.clockString;
 
+    // Noise indicator
+    const noiseInfo = Engine.noiseLevel;
+    const noiseEl = document.getElementById('noise-indicator');
+    noiseEl.textContent = noiseInfo.label;
+    noiseEl.className = `noise-indicator ${noiseInfo.css}`;
+
     // Character stats
     const c = Engine.character;
     if (!c) return;
@@ -223,6 +229,8 @@ const Game = {
         }
 
         div.addEventListener('click', () => {
+          // Can't move on the map while inside a building
+          if (Engine.playerLocation) return;
           // Click to move if adjacent
           const dx = Math.abs(x - Engine.playerPos.x);
           const dy = Math.abs(y - Engine.playerPos.y);
@@ -315,28 +323,39 @@ const Game = {
         parts.push(`<div><a href="#" onclick="Game._enterBuilding('${b.id}');return false;" style="color:var(--text-yellow-pale);">${this._esc(b.name)}</a></div>`);
       });
     } else if (Engine.playerLocation.building && !Engine.playerLocation.room) {
-      // Show rooms
-      Engine.playerLocation.building.rooms.forEach(r => {
-        parts.push(`<div><a href="#" onclick="Game._enterRoom('${r.id}');return false;" style="color:var(--text-yellow-pale);">${this._esc(r.name)}</a></div>`);
-      });
-      parts.push(`<div><a href="#" onclick="Game._leaveBuilding();return false;" style="color:var(--text-light);">[Leave]</a></div>`);
+      // Inside building — show rooms prominently
+      const bldg = Engine.playerLocation.building;
+      if (bldg.rooms.length > 0) {
+        parts.push('<div class="text-muted" style="margin-bottom:0.25rem;font-size:0.7rem;">Rooms to explore:</div>');
+        bldg.rooms.forEach(r => {
+          const searched = r.searched ? ' <span class="text-muted">(searched)</span>' : '';
+          parts.push(`<div style="padding:2px 0;"><a href="#" onclick="Game._enterRoom('${r.id}');return false;" class="room-link">${this._esc(r.name)}</a>${searched}</div>`);
+        });
+      } else {
+        parts.push('<div class="text-muted">Nothing to explore here.</div>');
+      }
+      parts.push(`<div style="margin-top:0.5rem;"><a href="#" onclick="Game._leaveBuilding();return false;" style="color:var(--text-light);">[Leave building]</a></div>`);
     } else if (Engine.playerLocation.room) {
-      // Show room items
+      // Inside a room — show items, other rooms, and leave
       const room = Engine.playerLocation.room;
       if (room.items.length > 0) {
+        parts.push('<div class="text-muted" style="margin-bottom:0.25rem;font-size:0.7rem;">Items here:</div>');
         room.items.forEach(item => {
-          parts.push(`<div><a href="#" onclick="Game._takeItem('${this._esc(item.name).replace(/'/g, "\\'")}');return false;" style="color:var(--text-yellow-soft);">${this._esc(item.name)}</a></div>`);
+          parts.push(`<div style="padding:2px 0;"><a href="#" onclick="Game._takeItem('${this._esc(item.name).replace(/'/g, "\\'")}');return false;" style="color:var(--text-yellow-soft);">${this._esc(item.name)}</a></div>`);
         });
+      } else if (room.searched) {
+        parts.push('<div class="text-muted">Nothing left here.</div>');
       }
-      // Show other rooms in this building
+      // Other rooms in this building
       const otherRooms = Engine.playerLocation.building.rooms.filter(r => r.id !== room.id);
       if (otherRooms.length > 0) {
-        parts.push('<div class="text-muted" style="margin-top:0.25rem;font-size:0.7rem;">Other rooms:</div>');
+        parts.push('<div class="text-muted" style="margin-top:0.5rem;margin-bottom:0.25rem;font-size:0.7rem;">Other rooms:</div>');
         otherRooms.forEach(r => {
-          parts.push(`<div><a href="#" onclick="Game._enterRoom('${r.id}');return false;" style="color:var(--text-yellow-pale);">${this._esc(r.name)}</a></div>`);
+          const searched = r.searched ? ' <span class="text-muted">(searched)</span>' : '';
+          parts.push(`<div style="padding:2px 0;"><a href="#" onclick="Game._enterRoom('${r.id}');return false;" class="room-link">${this._esc(r.name)}</a>${searched}</div>`);
         });
       }
-      parts.push(`<div style="margin-top:0.25rem;"><a href="#" onclick="Game._leaveBuilding();return false;" style="color:var(--text-light);">[Leave building]</a></div>`);
+      parts.push(`<div style="margin-top:0.5rem;"><a href="#" onclick="Game._leaveBuilding();return false;" style="color:var(--text-light);">[Leave building]</a></div>`);
     }
 
     el.innerHTML = parts.length > 0 ? parts.join('') : '<span class="text-muted">Nothing</span>';
@@ -348,11 +367,20 @@ const Game = {
     const hasZombies = cell && cell.zombies.length > 0;
     const isKeyLoc = cell?.keyLocation;
 
-    document.getElementById('act-search').disabled = !Engine.playerLocation?.room;
-    document.getElementById('act-enter').textContent = inBuilding ? 'Leave' : 'Enter';
+    document.getElementById('act-search').disabled = false; // Search works everywhere now
 
-    const bldgs = inBuilding ? [] : GameMap.getBuildings(Engine.playerPos.x, Engine.playerPos.y);
-    document.getElementById('act-enter').disabled = !inBuilding && bldgs.length === 0;
+    const enterBtn = document.getElementById('act-enter');
+    if (Engine.playerLocation?.room) {
+      enterBtn.textContent = 'Leave Room';
+      enterBtn.disabled = false;
+    } else if (inBuilding) {
+      enterBtn.textContent = 'Leave';
+      enterBtn.disabled = false;
+    } else {
+      enterBtn.textContent = 'Enter';
+      const bldgs = GameMap.getBuildings(Engine.playerPos.x, Engine.playerPos.y);
+      enterBtn.disabled = bldgs.length === 0;
+    }
 
     document.getElementById('act-attack').disabled = !hasZombies;
     document.getElementById('act-secure').disabled = false;
@@ -515,6 +543,66 @@ const Game = {
     Engine.state = 'playing';
   },
 
+  // --- Map modal ---
+
+  _showMapModal() {
+    const overlay = document.getElementById('map-overlay');
+    const grid = document.getElementById('map-modal-grid');
+    grid.style.gridTemplateColumns = `repeat(${GameMap.SIZE}, 1fr)`;
+    grid.innerHTML = '';
+
+    for (let y = 0; y < GameMap.SIZE; y++) {
+      for (let x = 0; x < GameMap.SIZE; x++) {
+        const cell = GameMap.grid[y][x];
+        const div = document.createElement('div');
+        div.className = `map-cell ${cell.type}`;
+
+        if (!cell.explored) {
+          div.style.opacity = '0.3';
+          div.title = '???';
+        } else {
+          div.title = cell.name;
+        }
+
+        // Key location markers
+        if (cell.keyLocation && cell.explored) {
+          const icons = { bridge: '\u{1F309}', dock: '\u{26F5}', airstrip: '\u{2708}' };
+          div.innerHTML = `<span class="cell-icon">${icons[cell.keyLocation] || ''}</span>`;
+        }
+
+        // Current position
+        if (x === Engine.playerPos.x && y === Engine.playerPos.y) {
+          div.classList.add('current');
+          div.innerHTML = '<span class="cell-icon">@</span>';
+        }
+
+        // Click to move (adjacent only, not while in a building)
+        div.addEventListener('click', () => {
+          if (Engine.playerLocation) return;
+          const dx = Math.abs(x - Engine.playerPos.x);
+          const dy = Math.abs(y - Engine.playerPos.y);
+          if (dx + dy === 1) {
+            if (x > Engine.playerPos.x) Engine.move('e');
+            else if (x < Engine.playerPos.x) Engine.move('w');
+            else if (y > Engine.playerPos.y) Engine.move('s');
+            else Engine.move('n');
+            this._hideMapModal();
+          }
+        });
+
+        grid.appendChild(div);
+      }
+    }
+
+    overlay.classList.remove('hidden');
+    Engine.state = 'paused';
+  },
+
+  _hideMapModal() {
+    document.getElementById('map-overlay').classList.add('hidden');
+    Engine.state = 'playing';
+  },
+
   // --- Action handlers ---
 
   _useItem(idx) {
@@ -667,7 +755,8 @@ const Game = {
     });
 
     // Toolbox
-    document.getElementById('tool-map').addEventListener('click', () => this._renderMap());
+    document.getElementById('tool-map').addEventListener('click', () => this._showMapModal());
+    document.getElementById('map-modal-close').addEventListener('click', () => this._hideMapModal());
     document.getElementById('tool-pack').addEventListener('click', () => {
       const panel = document.querySelector('.inventory-panel');
       if (!panel) return;

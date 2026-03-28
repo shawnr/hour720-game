@@ -92,8 +92,11 @@ const Combat = {
     if (timeOfDay === 'night') modifier -= 3;
     else if (timeOfDay === 'dusk' || timeOfDay === 'dawn') modifier -= 1;
 
-    // Zombie multiplier: zombies are easier to hit
+    // Zombie multiplier: zombies are easier to hit (slow, predictable)
     if (defender.zombie) modifier += 4;
+
+    // Zombie attackers are relentless — they don't feint, they lunge
+    if (attacker.zombie) modifier += 6;
 
     // Roll d20 — must roll UNDER (10 + modifier)
     const roll = Math.floor(Math.random() * 20) + 1;
@@ -179,17 +182,19 @@ const Combat = {
     for (let i = 0; i < count; i++) {
       const gender = Math.random() < 0.5 ? 'm' : 'f';
       const name = H720Data.getRandomName(gender);
+      // Zombies get stronger as days pass — fresher dead are tougher
+      const dayBonus = Math.min(gameDay, 5);
       zombies.push({
         id: `z_${Date.now()}_${i}`,
         name: `${name.first} ${name.last}`,
-        str: 4 + Math.floor(Math.random() * 6),   // 60-80% of human
-        dex: 3 + Math.floor(Math.random() * 5),
+        str: 6 + Math.floor(Math.random() * 6) + dayBonus,
+        dex: 5 + Math.floor(Math.random() * 5),
         mt: 1,
-        pt: 3 + Math.floor(Math.random() * 5),
-        hp: 8 + Math.floor(Math.random() * 10),
+        pt: 4 + Math.floor(Math.random() * 5),
+        hp: 10 + Math.floor(Math.random() * 12) + dayBonus,
         mh: 0,
         zombie: true,
-        weapon: { melee: 2, missile: 0 },  // zombie claws/bite
+        weapon: { melee: 3 + Math.floor(dayBonus / 2), missile: 0 },
       });
     }
 

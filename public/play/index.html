@@ -72,6 +72,7 @@
     </div>
     <div class="game-clock">
       <span id="game-day">Day 1</span> &mdash; <span id="game-time">06:00</span>
+      <span id="noise-indicator" class="noise-indicator noise-silent" title="Noise level">Silent</span>
     </div>
     <div class="game-menu">
       <button id="btn-radio">Radio</button>
@@ -173,6 +174,21 @@
   <div class="text-center mt-2">
     <button class="btn-play" id="btn-play-again">Play Again</button>
     <p class="mt-1"><a href="../">Back to About</a></p>
+  </div>
+</div>
+
+
+<div id="map-overlay" class="map-overlay hidden">
+  <div class="map-modal-panel">
+    <h3>New Hampton — Island Map</h3>
+    <div class="map-modal-grid" id="map-modal-grid"></div>
+    <div class="map-legend">
+      <span class="legend-item"><span class="legend-swatch urban"></span> Urban</span>
+      <span class="legend-item"><span class="legend-swatch suburban"></span> Suburban</span>
+      <span class="legend-item"><span class="legend-swatch rural"></span> Rural</span>
+      <span class="legend-item"><span class="legend-swatch shore"></span> Shore</span>
+    </div>
+    <button id="map-modal-close">Close</button>
   </div>
 </div>
 

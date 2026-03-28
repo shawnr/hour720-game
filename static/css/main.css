@@ -267,10 +267,10 @@ img {
   position: relative;
 }
 
-.map-cell.urban { background: #666; }
-.map-cell.suburban { background: #556655; }
-.map-cell.rural { background: #445544; }
-.map-cell.shore { background: #445566; }
+.map-cell.urban { background: #8a7e6b; }
+.map-cell.suburban { background: #6a8a5e; }
+.map-cell.rural { background: #4a7a3e; }
+.map-cell.shore { background: #4a6a8a; }
 .map-cell.current {
   outline: 2px solid var(--text-yellow);
   z-index: 1;
