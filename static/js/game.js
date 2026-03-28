@@ -114,7 +114,23 @@ const Game = {
 
   // --- Main game UI ---
 
+  // Cache for innerHTML sections to avoid flicker from redundant writes
+  _cache: {},
+
+  _setHTML(id, html) {
+    if (this._cache[id] === html) return;
+    this._cache[id] = html;
+    document.getElementById(id).innerHTML = html;
+  },
+
+  _setText(id, text) {
+    if (this._cache[id] === text) return;
+    this._cache[id] = text;
+    document.getElementById(id).textContent = text;
+  },
+
   _startGameUI() {
+    this._cache = {};
     this._renderMap();
     this._updateUI();
     Engine.startLoop(() => this._updateUI());
@@ -122,28 +138,33 @@ const Game = {
 
   _updateUI() {
     // Clock
-    document.getElementById('game-day').textContent = `Day ${Engine.day}`;
-    document.getElementById('game-time').textContent = Engine.clockString;
+    this._setText('game-day', `Day ${Engine.day}`);
+    this._setText('game-time', Engine.clockString);
 
     // Noise indicator
     const noiseInfo = Engine.noiseLevel;
     const noiseEl = document.getElementById('noise-indicator');
-    noiseEl.textContent = noiseInfo.label;
-    noiseEl.className = `noise-indicator ${noiseInfo.css}`;
+    if (this._cache._noiseLabel !== noiseInfo.label) {
+      this._cache._noiseLabel = noiseInfo.label;
+      noiseEl.textContent = noiseInfo.label;
+      noiseEl.className = `noise-indicator ${noiseInfo.css}`;
+    }
 
     // Character stats
     const c = Engine.character;
     if (!c) return;
 
-    document.getElementById('game-char-name').textContent = c.fullName;
-    document.getElementById('game-char-prof').textContent = `${c.profession} | ${c.age} ${c.ageGroup}`;
+    this._setText('game-char-name', c.fullName);
+    this._setText('game-char-prof', `${c.profession} | ${c.age} ${c.ageGroup}`);
 
-    document.getElementById('game-hp').textContent = `${Math.round(c.hp)}/${c.maxHp}`;
-    document.getElementById('game-mh').textContent = `${Math.round(c.mh)}/${c.maxMh}`;
-    document.getElementById('game-str').textContent = c.str;
-    document.getElementById('game-dex').textContent = c.dex;
-    document.getElementById('game-mt').textContent = c.mt;
-    document.getElementById('game-pt').textContent = c.pt;
+    const hpText = `${Math.round(c.hp)}/${c.maxHp}`;
+    const mhText = `${Math.round(c.mh)}/${c.maxMh}`;
+    this._setText('game-hp', hpText);
+    this._setText('game-mh', mhText);
+    this._setText('game-str', String(c.str));
+    this._setText('game-dex', String(c.dex));
+    this._setText('game-mt', String(c.mt));
+    this._setText('game-pt', String(c.pt));
 
     // Health bars
     const hpPct = Math.max(0, (c.hp / c.maxHp) * 100);
@@ -155,20 +176,20 @@ const Game = {
     hpBar.className = `fill hp${hpPct < 25 ? ' critical' : hpPct < 50 ? ' warning' : ''}`;
     mhBar.className = `fill mh${mhPct < 25 ? ' critical' : mhPct < 50 ? ' warning' : ''}`;
 
-    // Character icon
-    const iconContainer = document.getElementById('char-icon');
+    // Character icon — only update when health level or infection changes
     const healthLevel = hpPct > 66 ? 3 : hpPct > 33 ? 2 : 1;
-    const iconFile = `${c.iconSet}_h${healthLevel}${c.infected ? '_z' : ''}.png`;
-    const imgBase = document.querySelector('script[src*="game.js"]')?.getAttribute('src')?.replace(/js\/game\.js.*$/, '') || '../';
-    iconContainer.innerHTML = `<img src="${imgBase}img/healthIcons/${iconFile}" alt="${c.fullName}">`;
+    const iconKey = `${c.iconSet}_${healthLevel}_${c.infected}`;
+    if (this._cache._iconKey !== iconKey) {
+      this._cache._iconKey = iconKey;
+      const iconFile = `${c.iconSet}_h${healthLevel}${c.infected ? '_z' : ''}.png`;
+      const imgBase = document.querySelector('script[src*="game.js"]')?.getAttribute('src')?.replace(/js\/game\.js.*$/, '') || '../';
+      document.getElementById('char-icon').innerHTML = `<img src="${imgBase}img/healthIcons/${iconFile}" alt="${c.fullName}">`;
+    }
 
-    // Mental state
+    // Mental state / conditions
     const mentalState = Combat.getMentalState(c.mt);
-    document.getElementById('game-conditions').innerHTML = `
-      <div>Mental: ${mentalState.name}</div>
-      ${c.infected ? '<div class="text-red">INFECTED</div>' : ''}
-      ${c.conditions.map(cond => `<div>${cond}</div>`).join('')}
-    `;
+    const conditionsHTML = `<div>Mental: ${mentalState.name}</div>${c.infected ? '<div class="text-red">INFECTED</div>' : ''}${c.conditions.map(cond => `<div>${cond}</div>`).join('')}`;
+    this._setHTML('game-conditions', conditionsHTML);
 
     // Inventory
     this._renderInventory();
@@ -176,19 +197,19 @@ const Game = {
     // Location info
     const cell = GameMap.getCell(Engine.playerPos.x, Engine.playerPos.y);
     if (cell) {
-      document.getElementById('loc-name').textContent = Engine.playerLocation?.building
+      this._setText('loc-name', Engine.playerLocation?.building
         ? Engine.playerLocation.building.name
-        : cell.name;
-      document.getElementById('loc-type').textContent = Engine.playerLocation?.room
+        : cell.name);
+      this._setText('loc-type', Engine.playerLocation?.room
         ? Engine.playerLocation.room.name
         : Engine.playerLocation?.building
         ? 'Inside'
-        : cell.type.charAt(0).toUpperCase() + cell.type.slice(1);
-      document.getElementById('loc-desc').textContent = Engine.playerLocation?.room
+        : cell.type.charAt(0).toUpperCase() + cell.type.slice(1));
+      this._setText('loc-desc', Engine.playerLocation?.room
         ? Engine.playerLocation.room.desc
         : Engine.playerLocation?.building
         ? Engine.playerLocation.building.desc
-        : cell.desc;
+        : cell.desc);
     }
 
     // Nearby
@@ -291,8 +312,12 @@ const Game = {
   },
 
   _renderInventory() {
-    const list = document.getElementById('inventory-list');
     const inv = Engine.character?.inventory || [];
+    const invKey = inv.map(i => i.name).join('|');
+    if (this._cache._invKey === invKey) return;
+    this._cache._invKey = invKey;
+
+    const list = document.getElementById('inventory-list');
     if (inv.length === 0) {
       list.innerHTML = '<li class="text-muted">Empty</li>';
       return;
@@ -371,7 +396,11 @@ const Game = {
       parts.push(`<div style="margin-top:0.5rem;"><a href="#" onclick="Game._leaveBuilding();return false;" style="color:var(--text-light);">[Leave building]</a></div>`);
     }
 
-    el.innerHTML = parts.length > 0 ? parts.join('') : '<span class="text-muted">Nothing</span>';
+    const nearbyHTML = parts.length > 0 ? parts.join('') : '<span class="text-muted">Nothing</span>';
+    if (this._cache._nearby !== nearbyHTML) {
+      this._cache._nearby = nearbyHTML;
+      el.innerHTML = nearbyHTML;
+    }
   },
 
   _updateActionButtons() {
