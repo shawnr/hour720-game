@@ -157,6 +157,7 @@ const Engine = {
 
     // Restore NPCs
     NPCSystem.npcs = saveData.npcs;
+    NPCSystem.cpcs = saveData.cpcs || [];
 
     // Restore radio
     Radio.init();
@@ -263,8 +264,10 @@ const Engine = {
       const locationMod = this.playerLocation ? -5 : 5; // Inside is quieter
       const effectiveNoise = Math.max(5, this.noise + (this.day * 3) + locationMod);
       const event = Combat.checkRandomEvent(effectiveNoise);
+      // Fully secured buildings (level 4) block zombie spawns inside
+      const inSecuredBuilding = this.playerLocation?.building?.security >= 4;
       if (event) {
-        if (event.type === 'zombie') {
+        if (event.type === 'zombie' && !inSecuredBuilding) {
           const zombies = Combat.spawnZombies(cell, this.day, this.timeOfDay === 'night');
           if (zombies.length > 0) {
             cell.zombies = cell.zombies.concat(zombies);
@@ -277,6 +280,8 @@ const Engine = {
             this.character.mh = Math.max(0, this.character.mh + (save.mtChange * 2));
             this.addEvent('system', save.message);
           }
+        } else if (event.type === 'zombie' && inSecuredBuilding) {
+          this.addEvent('system', 'You hear scratching at the barricades, but they hold.');
         } else {
           this.addEvent('system', event.message);
         }
@@ -640,16 +645,58 @@ const Engine = {
     const cell = GameMap.getCell(this.playerPos.x, this.playerPos.y);
     if (!cell) return;
 
-    this._addNoise(this.NOISE_SECURE);
-    if (this.playerLocation?.building) {
-      const bldg = this.playerLocation.building;
-      bldg.security = Math.min(10, (bldg.security || 0) + 2);
-      this.addEvent('system',
-        `You barricade ${bldg.name}. Security improved.`
-      );
+    // Must be inside a building to secure
+    if (!this.playerLocation?.building) {
+      this.addEvent('system', 'You need to be inside a building to barricade.');
+      return;
+    }
+
+    const bldg = this.playerLocation.building;
+
+    // Max security is 4
+    if ((bldg.security || 0) >= 4) {
+      this.addEvent('system', `${bldg.name} is fully secured. No more can be done.`);
+      return;
+    }
+
+    // Requires a barricade item (craft > 0)
+    const barricadeIdx = this.character.inventory.findIndex(i => i.craft > 0);
+    if (barricadeIdx === -1) {
+      this.addEvent('system', 'You need materials to barricade — wood, metal, chain, rope, or similar.');
+      return;
+    }
+
+    // Consume the item
+    const item = this.character.inventory.splice(barricadeIdx, 1)[0];
+    const craftBonus = item.craft || 1;
+
+    // Security increases by item craft value (capped at 4)
+    bldg.security = Math.min(4, (bldg.security || 0) + craftBonus);
+
+    // Securing is LOUD — noise scales inversely with building size
+    const roomCount = bldg.rooms.length || 1;
+    const noiseAmount = Math.max(10, 30 - (roomCount * 2)); // Small building = more noise
+    this._addNoise(noiseAmount);
+
+    this.addEvent('system',
+      `You use the ${item.name} to barricade ${bldg.name}. Security: ${bldg.security}/4.`
+    );
+
+    if (bldg.security >= 4) {
+      this.addEvent('system', 'The building is fully secured. Zombies cannot get in.');
     } else {
-      cell.security = Math.min(5, (cell.security || 0) + 1);
-      this.addEvent('system', 'You shore up some defenses in the area.');
+      this.addEvent('system', 'The noise of construction carries...');
+    }
+
+    // Securing attracts zombies OUTSIDE the building
+    if (Math.random() < 0.4 + (noiseAmount / 100)) {
+      const zombies = Combat.spawnZombies(cell, this.day, this.timeOfDay === 'night');
+      if (zombies.length > 0) {
+        cell.zombies = cell.zombies.concat(zombies);
+        this.addEvent('combat',
+          `The noise attracts ${zombies.length} zombie${zombies.length > 1 ? 's' : ''} outside!`
+        );
+      }
     }
   },
 
@@ -790,6 +837,7 @@ const Engine = {
       map: GameMap.grid,
       buildings: GameMap.buildings,
       npcs: NPCSystem.npcs,
+      cpcs: NPCSystem.cpcs,
       radio: Radio.toJSON(),
       eventLog: this.eventLog,
       stats: this.stats,

@@ -7,6 +7,7 @@
 const NPCSystem = {
 
   npcs: [],
+  cpcs: [],   // Computer Player Characters — simulate other players
 
   // Conditions that NPCs can have, with item requirements
   CONDITIONS: [
@@ -172,6 +173,45 @@ const NPCSystem = {
 
     // Inject medical items into map rooms so player can find them
     this._placeMedicalItems(gameMap);
+
+    // Generate CPCs (Computer Player Characters) — simulate other players
+    this._initCPCs(gameMap);
+  },
+
+  _initCPCs(gameMap) {
+    this.cpcs = [];
+    const numCPCs = 3 + Math.floor(Math.random() * 3); // 3-5
+
+    // Use original user names, shuffled, starting after NPC names
+    const usedNames = new Set(this.npcs.map(n => n.fullName));
+    const availableNames = H720Data.users
+      .filter(u => u.u_name !== 'shawn')
+      .map(u => ({
+        firstName: u.u_firstName || u.u_name,
+        lastName: u.u_lastName || '',
+      }))
+      .filter(n => !usedNames.has(`${n.firstName} ${n.lastName}`.trim()))
+      .sort(() => Math.random() - 0.5);
+
+    for (let i = 0; i < numCPCs; i++) {
+      const nameData = availableNames[i] || H720Data.getRandomName(Math.random() < 0.5 ? 'm' : 'f');
+      const charData = CharGen.generate(`${nameData.firstName} ${nameData.lastName}`);
+      const pos = this._randomPosition(gameMap);
+
+      this.cpcs.push({
+        id: `cpc_${i}`,
+        firstName: nameData.firstName,
+        lastName: nameData.lastName,
+        fullName: `${nameData.firstName} ${nameData.lastName}`.trim(),
+        character: charData,
+        alive: true,
+        following: false,
+        x: pos.x,
+        y: pos.y,
+        met: false,
+        inventory: [],
+      });
+    }
   },
 
   _nearPosition(gameMap, target, radius) {
@@ -287,6 +327,48 @@ const NPCSystem = {
       }
     });
 
+    // CPC tick
+    this.cpcs.forEach(cpc => {
+      if (!cpc.alive) return;
+
+      if (cpc.following) {
+        // Follow the player
+        cpc.x = playerX;
+        cpc.y = playerY;
+
+        // CPCs pick up items when in rooms with the player
+        if (cpc.inventory.length < 5 && Math.random() < 0.1) {
+          const item = Engine._randomScavengeItem?.();
+          if (item) {
+            cpc.inventory.push(item);
+          }
+        }
+      } else {
+        // Wander randomly
+        if (Math.random() < 0.4) {
+          const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+          const dir = dirs[Math.floor(Math.random() * dirs.length)];
+          const nx = cpc.x + dir[0];
+          const ny = cpc.y + dir[1];
+          if (nx >= 0 && nx < GameMap.WIDTH && ny >= 0 && ny < GameMap.HEIGHT) {
+            cpc.x = nx;
+            cpc.y = ny;
+          }
+        }
+      }
+
+      // Encounter: if CPC is on the same cell as player and not yet met, auto-follow
+      if (cpc.x === playerX && cpc.y === playerY && !cpc.met) {
+        cpc.met = true;
+        cpc.following = true;
+        const profLabel = CharGen.getProfessionLabel(cpc.character.profession);
+        const skills = cpc.character.skills.map(s => s.name).join(', ');
+        let msg = `${cpc.fullName}, ${CharGen.articleFor(profLabel)} ${profLabel}, joins your group.`;
+        if (skills) msg += ` Skills: ${skills}.`;
+        events.push({ type: 'npc_encounter', npc: cpc, message: msg });
+      }
+    });
+
     return events;
   },
 
@@ -335,9 +417,11 @@ const NPCSystem = {
     };
   },
 
-  /** Get NPCs at a specific location */
+  /** Get NPCs and CPCs at a specific location */
   getNPCsAt(x, y) {
-    return this.npcs.filter(n => n.alive && n.x === x && n.y === y);
+    const npcs = this.npcs.filter(n => n.alive && n.x === x && n.y === y);
+    const cpcs = this.cpcs.filter(c => c.alive && c.x === x && c.y === y);
+    return [...npcs, ...cpcs];
   },
 
   /** Get NPC by id */
@@ -345,10 +429,19 @@ const NPCSystem = {
     return this.npcs.find(n => n.id === id) || null;
   },
 
-  /** Check if player has the required NPC for an escape route */
+  /** Check if player has the required NPC or CPC for an escape route */
   hasEscapeNPC(escapeRoute) {
-    return this.npcs.some(
-      n => n.alive && n.following && n.roleData.escapeRoute === escapeRoute
-    );
+    // Check role-based NPCs
+    if (this.npcs.some(n => n.alive && n.following && n.roleData.escapeRoute === escapeRoute)) {
+      return true;
+    }
+    // Check CPCs with relevant skills
+    return this.cpcs.some(cpc => {
+      if (!cpc.alive || !cpc.following) return false;
+      const skills = cpc.character.skills.map(s => s.name.toLowerCase());
+      if (escapeRoute === 'airstrip') return skills.some(s => s.includes('pilot'));
+      if (escapeRoute === 'dock') return skills.some(s => s.includes('mechanic') || s.includes('engineering'));
+      return false;
+    });
   },
 };

@@ -425,7 +425,13 @@ const Game = {
     }
 
     document.getElementById('act-attack').disabled = !hasZombies;
-    document.getElementById('act-secure').disabled = false;
+
+    // Secure requires: inside a building + have a craft item + not already max
+    const canSecure = inBuilding &&
+      Engine.character?.inventory.some(i => i.craft > 0) &&
+      (Engine.playerLocation?.building?.security || 0) < 4;
+    document.getElementById('act-secure').disabled = !canSecure;
+
     document.getElementById('act-rest').disabled = false;
 
     // Escape button — visible at key locations or boathouses with boats
