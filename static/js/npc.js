@@ -178,7 +178,7 @@ const NPCSystem = {
     for (let attempt = 0; attempt < 20; attempt++) {
       const x = target.x + Math.floor(Math.random() * (radius * 2 + 1)) - radius;
       const y = target.y + Math.floor(Math.random() * (radius * 2 + 1)) - radius;
-      if (x >= 0 && x < GameMap.SIZE && y >= 0 && y < GameMap.SIZE) {
+      if (x >= 0 && x < GameMap.WIDTH && y >= 0 && y < GameMap.HEIGHT) {
         return { x, y };
       }
     }
@@ -187,8 +187,8 @@ const NPCSystem = {
 
   _randomPosition(gameMap) {
     return {
-      x: 1 + Math.floor(Math.random() * (GameMap.SIZE - 2)),
-      y: 1 + Math.floor(Math.random() * (GameMap.SIZE - 2)),
+      x: 1 + Math.floor(Math.random() * (GameMap.WIDTH - 2)),
+      y: 1 + Math.floor(Math.random() * (GameMap.HEIGHT - 2)),
     };
   },
 
@@ -202,8 +202,8 @@ const NPCSystem = {
       // Place 1-2 copies in random buildings
       const copies = 1 + Math.floor(Math.random() * 2);
       for (let c = 0; c < copies; c++) {
-        const rx = Math.floor(Math.random() * GameMap.SIZE);
-        const ry = Math.floor(Math.random() * GameMap.SIZE);
+        const rx = Math.floor(Math.random() * GameMap.WIDTH);
+        const ry = Math.floor(Math.random() * GameMap.HEIGHT);
         const bldgs = GameMap.getBuildings(rx, ry);
         if (bldgs.length > 0) {
           const bldg = bldgs[Math.floor(Math.random() * bldgs.length)];

@@ -13,6 +13,19 @@
     "room_sec": 1
   },
   {
+    "room_id": 45,
+    "room_name": "Men's Room",
+    "room_cat": "restroom",
+    "room_type": "restroom",
+    "room_prob": 3,
+    "room_desc": "Tile floors, flickering fluorescent light. The mirror is cracked.",
+    "room_light": 15,
+    "room_cover": 6,
+    "room_numItem": 2,
+    "room_max": 2,
+    "room_sec": 1
+  },
+  {
     "room_id": 2,
     "room_name": "[firstName]'s Tunes",
     "room_cat": "mall",

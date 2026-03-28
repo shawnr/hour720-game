@@ -22,7 +22,7 @@ const Engine = {
 
   // Player state
   character: null,
-  playerPos: { x: 4, y: 4 },  // Start in center
+  playerPos: { x: 6, y: 5 },  // Start in center of 13x11 grid
   playerLocation: null,        // Current building/room or null (outdoors)
 
   // Bridge is open only on Day 1
@@ -94,7 +94,7 @@ const Engine = {
     this.day = 1;
     this.gameTime = 0;
     this.bridgeOpen = true;
-    this.playerPos = { x: 4, y: 4 };
+    this.playerPos = { x: 6, y: 5 };
     this.playerLocation = null;
     this.eventLog = [];
     this.saveId = `save_${Date.now()}`;
@@ -324,6 +324,26 @@ const Engine = {
    */
 
   move(direction) {
+    // If zombies are present, must roll to escape before moving
+    const currentCell = GameMap.getCell(this.playerPos.x, this.playerPos.y);
+    if (currentCell && currentCell.zombies.length > 0) {
+      const escapeRoll = Math.floor(Math.random() * 20) + 1;
+      const target = 8 + currentCell.zombies.length * 2 - Math.floor(this.character.dex / 3);
+      if (escapeRoll < target) {
+        // Failed to escape — zombie gets a free hit
+        const zombie = currentCell.zombies[0];
+        const result = Combat.resolveAttack(zombie, this.character, { timeOfDay: this.timeOfDay });
+        if (result.hit) {
+          this.character.hp = result.defenderHp;
+          this.addEvent('combat', `You try to flee but a zombie blocks you! ${result.message}`);
+        } else {
+          this.addEvent('combat', 'You try to flee but the zombies block your path!');
+        }
+        return false;
+      }
+      this.addEvent('combat', 'You break free from the zombies!');
+    }
+
     const dx = { n: 0, s: 0, e: 1, w: -1 }[direction] || 0;
     const dy = { n: -1, s: 1, e: 0, w: 0 }[direction] || 0;
     const nx = this.playerPos.x + dx;
@@ -334,6 +354,10 @@ const Engine = {
       this.addEvent('system', 'You can\'t go that way.');
       return false;
     }
+
+    // Outdoor movement costs a small amount of HP (fatigue)
+    this.character.hp = Math.max(1, this.character.hp - 0.5);
+    this.character.mh = Math.max(0, this.character.mh - 0.15);
 
     this.playerPos = { x: nx, y: ny };
     this.playerLocation = null; // Back outdoors
@@ -348,6 +372,21 @@ const Engine = {
       this.addEvent('combat',
         `There ${cell.zombies.length === 1 ? 'is' : 'are'} ${cell.zombies.length} zombie${cell.zombies.length > 1 ? 's' : ''} here!`
       );
+    }
+
+    // Chance of zombie ambush when entering a new area (increases with day)
+    if (cell.zombies.length === 0 && Math.random() < 0.05 + (this.day * 0.01)) {
+      const ambush = Combat.spawnZombies(cell, this.day, this.timeOfDay === 'night');
+      if (ambush.length > 0) {
+        cell.zombies = cell.zombies.concat(ambush);
+        this.addEvent('combat', 'Zombies emerge from the shadows!');
+        // Ambush attack — one zombie gets a free hit
+        const result = Combat.resolveAttack(ambush[0], this.character, { timeOfDay: this.timeOfDay });
+        if (result.hit) {
+          this.character.hp = result.defenderHp;
+          this.addEvent('combat', `Ambush! ${result.message}`);
+        }
+      }
     }
 
     // Check for NPCs
@@ -662,22 +701,34 @@ const Engine = {
     }
 
     if (route === 'dock') {
-      if (!NPCSystem.hasEscapeNPC('dock')) {
+      const playerCanFix = this.character.skills?.some(s =>
+        s.name.toLowerCase().includes('mechanic') || s.name.toLowerCase().includes('engineering')
+      );
+      if (!playerCanFix && !NPCSystem.hasEscapeNPC('dock')) {
         this.addEvent('system',
           'The boat engine is dead. You need someone who can fix it.'
         );
         return false;
+      }
+      if (playerCanFix) {
+        this.addEvent('system', 'You get the engine running with your mechanical skills.');
       }
       this._endGame('escaped', 'dock');
       return true;
     }
 
     if (route === 'airstrip') {
-      if (!NPCSystem.hasEscapeNPC('airstrip')) {
+      const playerCanFly = this.character.skills?.some(s =>
+        s.name.toLowerCase().includes('pilot')
+      );
+      if (!playerCanFly && !NPCSystem.hasEscapeNPC('airstrip')) {
         this.addEvent('system',
           'You don\'t know how to fly a plane. You need a pilot.'
         );
         return false;
+      }
+      if (playerCanFly) {
+        this.addEvent('system', 'Your pilot training kicks in. You can fly this.');
       }
       this._endGame('escaped', 'airstrip');
       return true;

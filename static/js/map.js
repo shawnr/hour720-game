@@ -6,7 +6,9 @@
 
 const GameMap = {
 
-  SIZE: 9,
+  WIDTH: 13,
+  HEIGHT: 11,
+  SIZE: 13,  // kept for compatibility (max dimension)
   grid: [],        // 2D array of map cells
   buildings: {},   // keyed by "x,y" -> array of building objects
   rooms: {},       // keyed by building id -> array of room objects
@@ -50,28 +52,44 @@ const GameMap = {
   // Adjacency weights: how likely a neighbor's type propagates
   ADJACENCY_WEIGHT: { urban: 0.6, suburban: 0.5, rural: 0.4, shore: 0.3 },
 
-  // Key locations for escape routes (placed deterministically)
+  // Map original block types to our terrain system
+  TYPE_MAP: {
+    'beach': 'shore', 'Special Shore': 'shore',
+    'urban street': 'urban', 'urban commercial': 'urban', 'urban residential': 'urban',
+    'Special Urban': 'urban', 'mall': 'urban',
+    'suburban street': 'suburban', 'Suburban Residential': 'suburban',
+    'suburban commercial': 'suburban', 'Special Suburb': 'suburban',
+    'park': 'rural', 'Special Rural': 'rural', 'wild': 'rural', 'cemetary': 'rural',
+  },
+
+  // Key locations for escape routes — placed on the original 13x11 grid
   KEY_LOCATIONS: {
-    bridge:  { x: 0, y: 4 },   // West edge — Day 1 only
-    dock:    { x: 8, y: 7 },   // Southeast shore
-    airstrip: { x: 7, y: 1 },  // Northeast rural
+    bridge:  { x: 0, y: 5 },    // West shore
+    dock:    { x: 12, y: 9 },   // Southeast shore
+    airstrip: { x: 10, y: 1 },  // Northeast rural
   },
 
   /**
-   * Generate a new 9x9 map with terrain clustering.
+   * Generate a map from the original game data (13x11 grid).
+   * Picks a random pre-generated map from maps.json.
    */
   generate() {
     this.grid = [];
     this.buildings = {};
     this.rooms = {};
 
-    // Step 1: Initialize grid with base terrain
-    for (let y = 0; y < this.SIZE; y++) {
+    // Pick a random original map (game IDs 1-5)
+    const mapGids = [...new Set(H720Data.maps.map(m => m.map_gid))];
+    const gid = mapGids[Math.floor(Math.random() * mapGids.length)];
+    const blocks = H720Data.maps.filter(m => m.map_gid === gid && m.map_zoom === 'block');
+
+    // Initialize grid
+    for (let y = 0; y < this.HEIGHT; y++) {
       this.grid[y] = [];
-      for (let x = 0; x < this.SIZE; x++) {
+      for (let x = 0; x < this.WIDTH; x++) {
         this.grid[y][x] = {
           x, y,
-          type: this._initialTerrain(x, y),
+          type: 'shore',  // default, overwritten from data
           name: '',
           desc: '',
           security: 0,
@@ -85,24 +103,28 @@ const GameMap = {
       }
     }
 
-    // Step 2: Refine with neighbor influence
-    for (let pass = 0; pass < 2; pass++) {
-      for (let y = 1; y < this.SIZE - 1; y++) {
-        for (let x = 1; x < this.SIZE - 1; x++) {
-          this._refineCell(x, y);
-        }
+    // Populate from original data
+    blocks.forEach(block => {
+      const x = block.map_x;
+      const y = block.map_y;
+      if (x >= 0 && x < this.WIDTH && y >= 0 && y < this.HEIGHT) {
+        const cell = this.grid[y][x];
+        cell.type = this.TYPE_MAP[block.map_type] || 'rural';
+        cell.name = block.map_name;
+        cell.desc = block.map_desc;
+        cell.light = block.map_light;
+        cell.cover = block.map_cover;
+        cell.security = block.map_security;
+        cell.originalType = block.map_type;  // Preserve for building generation
       }
-    }
+    });
 
-    // Step 3: Place key locations
+    // Place key locations
     this._placeKeyLocations();
 
-    // Step 4: Name all blocks
-    this._nameBlocks();
-
-    // Step 5: Generate buildings for each block
-    for (let y = 0; y < this.SIZE; y++) {
-      for (let x = 0; x < this.SIZE; x++) {
+    // Generate buildings for each block
+    for (let y = 0; y < this.HEIGHT; y++) {
+      for (let x = 0; x < this.WIDTH; x++) {
         this._generateBuildings(x, y);
       }
     }
@@ -312,9 +334,9 @@ const GameMap = {
         roomTemplates = H720Data.rooms.filter(r => r.room_cat === 'vendor');
       }
 
-      // Shuffle templates and pick without replacement where possible
+      // Shuffle templates and pick without replacement — never exceed unique templates
       const shuffled = [...roomTemplates].sort(() => Math.random() - 0.5);
-      const actualRooms = shuffled.length === 0 ? 0 : numRooms;
+      const actualRooms = Math.min(numRooms, shuffled.length);
       for (let j = 0; j < actualRooms; j++) {
         // Use unique templates first, then cycle back if we need more rooms than templates
         const rt = shuffled[j % shuffled.length];
@@ -365,7 +387,7 @@ const GameMap = {
 
   /** Get cell at coordinates */
   getCell(x, y) {
-    if (x < 0 || x >= this.SIZE || y < 0 || y >= this.SIZE) return null;
+    if (x < 0 || x >= this.WIDTH || y < 0 || y >= this.HEIGHT) return null;
     return this.grid[y]?.[x] || null;
   },
 
@@ -378,8 +400,8 @@ const GameMap = {
   getDirections(x, y) {
     return {
       n: y > 0,
-      s: y < this.SIZE - 1,
-      e: x < this.SIZE - 1,
+      s: y < this.HEIGHT - 1,
+      e: x < this.WIDTH - 1,
       w: x > 0,
     };
   },

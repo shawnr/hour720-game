@@ -237,11 +237,11 @@ const Game = {
    */
   _renderMap() {
     const grid = document.getElementById('map-grid');
-    grid.style.gridTemplateColumns = `repeat(${GameMap.SIZE}, 1fr)`;
+    grid.style.gridTemplateColumns = `repeat(${GameMap.WIDTH}, 1fr)`;
     grid.innerHTML = '';
 
-    for (let y = 0; y < GameMap.SIZE; y++) {
-      for (let x = 0; x < GameMap.SIZE; x++) {
+    for (let y = 0; y < GameMap.HEIGHT; y++) {
+      for (let x = 0; x < GameMap.WIDTH; x++) {
         const cell = GameMap.grid[y][x];
         const div = document.createElement('div');
         div.className = `map-cell ${cell.type}`;
@@ -624,11 +624,11 @@ const Game = {
   _showMapModal() {
     const overlay = document.getElementById('map-overlay');
     const grid = document.getElementById('map-modal-grid');
-    grid.style.gridTemplateColumns = `repeat(${GameMap.SIZE}, 1fr)`;
+    grid.style.gridTemplateColumns = `repeat(${GameMap.WIDTH}, 1fr)`;
     grid.innerHTML = '';
 
-    for (let y = 0; y < GameMap.SIZE; y++) {
-      for (let x = 0; x < GameMap.SIZE; x++) {
+    for (let y = 0; y < GameMap.HEIGHT; y++) {
+      for (let x = 0; x < GameMap.WIDTH; x++) {
         const cell = GameMap.grid[y][x];
         const div = document.createElement('div');
         div.className = `map-cell ${cell.type}`;

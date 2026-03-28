@@ -14,6 +14,7 @@ const H720Data = {
   names: { maleFirst: [], femaleFirst: [], last: [] },
   radio: [],
   users: [],
+  maps: [],
   _loaded: false,
 
   async load() {
@@ -29,7 +30,7 @@ const H720Data = {
 
     const files = [
       'items', 'skills', 'buildings', 'blocks', 'rooms',
-      'jobclasses', 'lifestyles', 'names', 'radio', 'users'
+      'jobclasses', 'lifestyles', 'names', 'radio', 'users', 'maps'
     ];
 
     const results = await Promise.all(
@@ -37,7 +38,7 @@ const H720Data = {
     );
 
     [this.items, this.skills, this.buildings, this.blocks, this.rooms,
-     this.jobclasses, this.lifestyles, this._rawNames, this.radio, this.users] = results;
+     this.jobclasses, this.lifestyles, this._rawNames, this.radio, this.users, this.maps] = results;
 
     // Index names by type and gender
     this.names.maleFirst = this._rawNames
