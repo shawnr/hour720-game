@@ -258,6 +258,33 @@ const Engine = {
     // Noise decays over time
     this._addNoise(-this.NOISE_DECAY);
 
+    // Zombies drift into cleared cells across the map (not just player's cell)
+    if (Math.random() < 0.3) {
+      const rx = Math.floor(Math.random() * GameMap.WIDTH);
+      const ry = Math.floor(Math.random() * GameMap.HEIGHT);
+      const randomCell = GameMap.getCell(rx, ry);
+      // Don't respawn on player's cell or in secured buildings
+      if (randomCell && !(rx === this.playerPos.x && ry === this.playerPos.y)) {
+        const maxForType = { urban: 8, suburban: 5, rural: 3, shore: 3 };
+        const cap = maxForType[randomCell.type] || 3;
+        if (randomCell.zombies.length < cap) {
+          const gender = Math.random() < 0.5 ? 'm' : 'f';
+          const name = H720Data.getRandomName(gender);
+          const dayBonus = Math.min(this.day, 10);
+          randomCell.zombies.push({
+            id: `z_drift_${Date.now()}_${rx}_${ry}`,
+            name: `${name.first} ${name.last}`,
+            str: 6 + Math.floor(Math.random() * 6) + Math.floor(dayBonus / 2),
+            dex: 5 + Math.floor(Math.random() * 5),
+            mt: 1, pt: 4 + Math.floor(Math.random() * 5),
+            hp: 10 + Math.floor(Math.random() * 12) + dayBonus,
+            mh: 0, zombie: true,
+            weapon: { melee: 5 + Math.floor(dayBonus / 2), missile: 0 },
+          });
+        }
+      }
+    }
+
     // Random event check at current location — driven by noise + day escalation
     const cell = GameMap.getCell(this.playerPos.x, this.playerPos.y);
     if (cell) {
@@ -362,10 +389,13 @@ const Engine = {
       return false;
     }
 
-    // Outdoor movement costs HP (fatigue) — worse at night
-    const nightPenalty = this.timeOfDay === 'night' ? 1.5 : 1;
-    this.character.hp = Math.max(1, this.character.hp - (1 * nightPenalty));
-    this.character.mh = Math.max(0, this.character.mh - (0.3 * nightPenalty));
+    // Outdoor movement costs HP (fatigue) — worse at night, worse when wounded
+    const nightMod = this.timeOfDay === 'night' ? 2 : 1;
+    const woundedMod = this.character.hp < this.character.maxHp / 2 ? 1.5 : 1;
+    const hpCost = 1.5 * nightMod * woundedMod;
+    const mhCost = 0.5 * nightMod;
+    this.character.hp = Math.max(1, this.character.hp - hpCost);
+    this.character.mh = Math.max(0, this.character.mh - mhCost);
 
     this.playerPos = { x: nx, y: ny };
     this.playerLocation = null; // Back outdoors

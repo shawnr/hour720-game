@@ -287,7 +287,11 @@ const Game = {
 
       // Update explored state
       div.style.opacity = cell.explored ? '1' : '0.3';
-      div.title = cell.explored ? cell.name : '???';
+      div.title = cell.explored ? `${cell.name}${cell.zombies.length > 0 ? ` (${cell.zombies.length} zombies)` : ''}` : '???';
+
+      // Zombie danger indicator on explored cells
+      div.classList.toggle('has-zombies', cell.explored && cell.zombies.length > 0);
+      div.classList.toggle('zombie-horde', cell.explored && cell.zombies.length >= 4);
 
       // Update current position marker
       const isCurrent = x === Engine.playerPos.x && y === Engine.playerPos.y;
@@ -297,6 +301,8 @@ const Game = {
         div.innerHTML = '<span class="cell-icon">@</span>';
       } else if (cell.keyLocation) {
         div.innerHTML = `<span class="cell-icon">${keyLetters[cell.keyLocation]}</span>`;
+      } else if (cell.explored && cell.zombies.length > 0) {
+        div.innerHTML = `<span class="cell-icon" style="color:var(--danger-red)">${cell.zombies.length}</span>`;
       } else {
         div.innerHTML = '';
       }

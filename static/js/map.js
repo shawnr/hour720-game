@@ -142,19 +142,29 @@ const GameMap = {
   _populateZombies() {
     const startX = Math.floor(this.WIDTH / 2);
     const startY = Math.floor(this.HEIGHT / 2);
-    const zombieChance = { urban: 0.7, suburban: 0.45, rural: 0.25, shore: 0.15 };
-    const zombieCount = { urban: [2, 5], suburban: [1, 3], rural: [1, 2], shore: [1, 2] };
+
+    // Almost every cell gets zombies — this is a zombie apocalypse
+    const zombieChance = { urban: 0.9, suburban: 0.8, rural: 0.6, shore: 0.5 };
+    const zombieCount = { urban: [3, 7], suburban: [2, 5], rural: [1, 3], shore: [1, 3] };
 
     for (let y = 0; y < this.HEIGHT; y++) {
       for (let x = 0; x < this.WIDTH; x++) {
         const cell = this.grid[y][x];
-        // Keep a 2-cell radius around start clear
-        if (Math.abs(x - startX) + Math.abs(y - startY) <= 2) continue;
+        // Only 1-cell safe zone around player start
+        if (Math.abs(x - startX) <= 1 && Math.abs(y - startY) <= 1) continue;
 
-        const chance = zombieChance[cell.type] || 0.2;
+        // Extra zombies near escape points — they're drawn to crowds
+        let nearEscape = false;
+        for (const loc of Object.values(this.KEY_LOCATIONS)) {
+          if (Math.abs(x - loc.x) + Math.abs(y - loc.y) <= 2) nearEscape = true;
+        }
+
+        const chance = zombieChance[cell.type] || 0.5;
         if (Math.random() < chance) {
-          const [min, max] = zombieCount[cell.type] || [1, 2];
-          const count = min + Math.floor(Math.random() * (max - min + 1));
+          const [min, max] = zombieCount[cell.type] || [1, 3];
+          let count = min + Math.floor(Math.random() * (max - min + 1));
+          if (nearEscape) count = Math.max(count, 3) + Math.floor(Math.random() * 3);
+
           for (let i = 0; i < count; i++) {
             const gender = Math.random() < 0.5 ? 'm' : 'f';
             const name = H720Data.getRandomName(gender);

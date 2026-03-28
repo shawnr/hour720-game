@@ -277,6 +277,12 @@ img {
 .map-cell.suburban { background: #6a8a5e; }
 .map-cell.rural { background: #4a7a3e; }
 .map-cell.shore { background: #4a6a8a; }
+.map-cell.has-zombies {
+  box-shadow: inset 0 0 0 1px rgba(204, 51, 51, 0.4);
+}
+.map-cell.zombie-horde {
+  box-shadow: inset 0 0 0 1px rgba(204, 51, 51, 0.8);
+}
 .map-cell.key-location {
   font-weight: bold;
   color: var(--text-yellow-bright);
