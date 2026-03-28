@@ -288,8 +288,8 @@ const GameMap = {
         npcs: [],
       };
 
-      // Generate rooms for this building
-      const numRooms = Math.max(1, Math.min(template.bldg_numRoom, template.bldg_max || 5));
+      // Generate rooms for this building (respect 0-room buildings like mausoleums)
+      const numRooms = template.bldg_numRoom === 0 ? 0 : Math.max(1, Math.min(template.bldg_numRoom, template.bldg_max || 5));
       // Match rooms by building type → room category using explicit mapping
       const ROOM_MATCH = {
         'restroom':    ['restroom'],
@@ -314,7 +314,8 @@ const GameMap = {
 
       // Shuffle templates and pick without replacement where possible
       const shuffled = [...roomTemplates].sort(() => Math.random() - 0.5);
-      for (let j = 0; j < numRooms; j++) {
+      const actualRooms = shuffled.length === 0 ? 0 : numRooms;
+      for (let j = 0; j < actualRooms; j++) {
         // Use unique templates first, then cycle back if we need more rooms than templates
         const rt = shuffled[j % shuffled.length];
         const room = {
