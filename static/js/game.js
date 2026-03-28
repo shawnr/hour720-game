@@ -60,9 +60,22 @@ const Game = {
           <div class="save-name">${this._esc(save.name)}</div>
           <div class="save-day">Day ${save.day}</div>
         </div>
-        <div class="save-date">${new Date(save.date).toLocaleDateString()}</div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div class="save-date">${new Date(save.date).toLocaleDateString()}</div>
+          <button class="save-delete" title="Delete save">&times;</button>
+        </div>
       `;
-      li.addEventListener('click', () => this._loadSave(save.id));
+      // Click row to load (but not if clicking delete)
+      li.addEventListener('click', (e) => {
+        if (e.target.closest('.save-delete')) return;
+        this._loadSave(save.id);
+      });
+      // Delete button
+      li.querySelector('.save-delete').addEventListener('click', (e) => {
+        e.stopPropagation();
+        SaveSystem.deleteSave(save.id);
+        this._renderSaveList(SaveSystem.listSaves());
+      });
       list.appendChild(li);
     });
   },

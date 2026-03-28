@@ -755,6 +755,21 @@ img {
   font-size: 0.85rem;
 }
 
+.save-list .save-delete {
+  background: none;
+  border: 1px solid #555;
+  color: #888;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.save-list .save-delete:hover {
+  color: var(--danger-red);
+  border-color: var(--danger-red);
+}
+
 /* --- End Screen --- */
 .end-screen {
   max-width: 700px;
