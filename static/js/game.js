@@ -290,7 +290,10 @@ const Game = {
     list.innerHTML = inv.map((item, i) => `
       <li title="${this._esc(item.desc)}">
         ${this._esc(item.name)}
-        <button onclick="Game._useItem(${i})" style="float:right;font-size:0.7rem;padding:0 4px;cursor:pointer;background:var(--accent-green);border:1px solid var(--accent-brown);color:var(--bg-darker);">Use</button>
+        <span style="float:right;">
+          <button onclick="Game._useItem(${i})" style="font-size:0.7rem;padding:0 4px;cursor:pointer;background:var(--accent-green);border:1px solid var(--accent-brown);color:var(--bg-darker);margin-left:2px;">Use</button>
+          <button onclick="Game._dropItem(${i})" style="font-size:0.7rem;padding:0 4px;cursor:pointer;background:#665;border:1px solid var(--accent-brown);color:var(--text-light);margin-left:2px;">Drop</button>
+        </span>
       </li>
     `).join('');
   },
@@ -607,6 +610,10 @@ const Game = {
 
   _useItem(idx) {
     Engine.useItem(idx);
+  },
+
+  _dropItem(idx) {
+    Engine.dropItem(idx);
   },
 
   _helpNPC(npcId) {

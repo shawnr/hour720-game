@@ -22,7 +22,7 @@ const Engine = {
 
   // Player state
   character: null,
-  playerPos: { x: 4, y: 4 },  // Start in center
+  playerPos: { x: 13, y: 13 },  // Start in center
   playerLocation: null,        // Current building/room or null (outdoors)
 
   // Bridge is open only on Day 1
@@ -94,7 +94,7 @@ const Engine = {
     this.day = 1;
     this.gameTime = 0;
     this.bridgeOpen = true;
-    this.playerPos = { x: 4, y: 4 };
+    this.playerPos = { x: 13, y: 13 };
     this.playerLocation = null;
     this.eventLog = [];
     this.saveId = `save_${Date.now()}`;

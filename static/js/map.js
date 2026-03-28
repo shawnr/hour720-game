@@ -1,12 +1,12 @@
 /**
  * Hour 720 — Map System
- * Generates and manages a 9x9 block grid with buildings and rooms.
+ * Generates and manages a 27x27 block grid with buildings and rooms.
  * Terrain clustering follows the original gameGenClass.php algorithm.
  */
 
 const GameMap = {
 
-  SIZE: 9,
+  SIZE: 27,
   grid: [],        // 2D array of map cells
   buildings: {},   // keyed by "x,y" -> array of building objects
   rooms: {},       // keyed by building id -> array of room objects
@@ -52,9 +52,9 @@ const GameMap = {
 
   // Key locations for escape routes (placed deterministically)
   KEY_LOCATIONS: {
-    bridge:  { x: 0, y: 4 },   // West edge — Day 1 only
-    dock:    { x: 8, y: 7 },   // Southeast shore
-    airstrip: { x: 7, y: 1 },  // Northeast rural
+    bridge:  { x: 0, y: 13 },   // West edge, midpoint
+    dock:    { x: 24, y: 23 },  // Southeast shore
+    airstrip: { x: 22, y: 3 },  // Northeast rural
   },
 
   /**
@@ -85,8 +85,8 @@ const GameMap = {
       }
     }
 
-    // Step 2: Refine with neighbor influence (2 passes)
-    for (let pass = 0; pass < 2; pass++) {
+    // Step 2: Refine with neighbor influence (more passes for larger map)
+    for (let pass = 0; pass < 4; pass++) {
       for (let y = 1; y < this.SIZE - 1; y++) {
         for (let x = 1; x < this.SIZE - 1; x++) {
           this._refineCell(x, y);
@@ -111,17 +111,22 @@ const GameMap = {
   },
 
   _initialTerrain(x, y) {
-    // Shore on edges
-    if (x === 0 || y === 0 || x === this.SIZE - 1 || y === this.SIZE - 1) {
-      return Math.random() < 0.6 ? 'shore' : 'rural';
+    // Shore on edges — 2-cell deep border for island feel
+    const edgeDist = Math.min(x, y, this.SIZE - 1 - x, this.SIZE - 1 - y);
+    if (edgeDist === 0) {
+      return 'shore';
     }
-    // Urban center
+    if (edgeDist === 1) {
+      return Math.random() < 0.7 ? 'shore' : 'rural';
+    }
+    // Urban center — scaled for 27x27
     const cx = Math.floor(this.SIZE / 2);
     const cy = Math.floor(this.SIZE / 2);
     const dist = Math.abs(x - cx) + Math.abs(y - cy);
-    if (dist <= 1) return 'urban';
-    if (dist <= 3) return Math.random() < 0.6 ? 'suburban' : (Math.random() < 0.5 ? 'urban' : 'rural');
-    return Math.random() < 0.5 ? 'rural' : 'suburban';
+    if (dist <= 3) return 'urban';
+    if (dist <= 7) return Math.random() < 0.6 ? 'suburban' : (Math.random() < 0.5 ? 'urban' : 'rural');
+    if (dist <= 12) return Math.random() < 0.5 ? 'rural' : 'suburban';
+    return Math.random() < 0.7 ? 'rural' : 'suburban';
   },
 
   _refineCell(x, y) {
@@ -168,20 +173,35 @@ const GameMap = {
     const urbanNames = [
       'Downtown', 'Main Street', 'Market District', 'City Center',
       'Old Town', 'Commerce Row', 'Civic Plaza', 'Financial District',
+      'Warehouse Row', 'Factory Block', 'Chinatown', 'Little Italy',
+      'Theater District', 'Midtown', 'Uptown', 'The Waterfront',
+      'Union Square', 'Court Street', 'Broad Street', 'City Hall',
+      'Central Station', 'Museum Row', 'Hospital Row', 'The Bowery',
     ];
     const suburbanNames = [
       'Oak Park', 'Maple Heights', 'Riverside', 'Greenfield',
       'Elmwood', 'Cedar Grove', 'Hillcrest', 'Lakewood',
       'Pinecrest', 'Brookside', 'Fairview', 'Westgate',
+      'Birchwood', 'Willow Glen', 'Aspen Ridge', 'Cherry Lane',
+      'Spruce Hill', 'Hawthorn Park', 'Sycamore Lane', 'Magnolia Court',
+      'Laurel Heights', 'Ivy Green', 'Chestnut Row', 'Holly Terrace',
+      'Poplar Street', 'Alder Crossing', 'Beechwood', 'Cypress Point',
     ];
     const ruralNames = [
       'Farmlands', 'Pine Woods', 'Open Fields', 'Old Mill Road',
       'Orchard Valley', 'Dusty Acres', 'Ridgeline', 'Meadow Creek',
+      'Gravel Pit', 'The Quarry', 'Sawmill Road', 'Cattle Pass',
+      'Back Forty', 'Cornfield', 'Timber Ridge', 'Fox Hollow',
+      'Stone Wall Lane', 'The Flats', 'Iron Bridge Road', 'Wildflower Patch',
+      'Hunting Ground', 'Old Dam Road', 'Blackberry Thicket', 'Hayfield',
     ];
     const shoreNames = [
       'North Beach', 'South Beach', 'East Shore', 'West Shore',
       'Rocky Point', 'Sandy Cove', 'Driftwood Beach', 'Seaside',
-      'Lighthouse Point', 'Pier Row',
+      'Lighthouse Point', 'Pier Row', 'Tidal Flats', 'Shell Beach',
+      'Breakwater', 'The Jetty', 'Gull Point', 'Salt Marsh',
+      'Kelp Cove', 'Smuggler\'s Beach', 'Windward Shore', 'Harbor Walk',
+      'Barnacle Point', 'Fisherman\'s Wharf', 'The Narrows', 'Dune Road',
     ];
 
     const used = new Set();
@@ -272,10 +292,20 @@ const GameMap = {
 
       // Generate rooms for this building
       const numRooms = Math.max(1, Math.min(template.bldg_numRoom, template.bldg_max || 5));
-      const roomTemplates = H720Data.rooms.filter(r => {
-        // Loosely match room category to building category
-        return true; // Simplified — all rooms available
-      });
+      // Match rooms by building type → room category
+      const bldgType = template.bldg_type;
+      let roomTemplates = H720Data.rooms.filter(r => r.room_cat === bldgType);
+      // Fallback: if no matching rooms (e.g. office, vendor, gas station),
+      // use a generic mix of bank (waiting areas) and house (kitchens, etc.)
+      if (roomTemplates.length === 0) {
+        roomTemplates = H720Data.rooms.filter(r =>
+          ['bank', 'restroom'].includes(r.room_cat)
+        );
+      }
+      // Final fallback: if still nothing, use all rooms
+      if (roomTemplates.length === 0) {
+        roomTemplates = H720Data.rooms;
+      }
 
       for (let j = 0; j < numRooms; j++) {
         const rt = roomTemplates[Math.floor(Math.random() * roomTemplates.length)];
