@@ -129,7 +129,51 @@ const GameMap = {
       }
     }
 
+    // Pre-populate zombies across the map — they're already here when you arrive
+    this._populateZombies();
+
     return this.grid;
+  },
+
+  /**
+   * Seed the map with zombies. Urban areas are dense, rural sparse.
+   * Player's starting area is kept clear.
+   */
+  _populateZombies() {
+    const startX = Math.floor(this.WIDTH / 2);
+    const startY = Math.floor(this.HEIGHT / 2);
+    const zombieChance = { urban: 0.7, suburban: 0.45, rural: 0.25, shore: 0.15 };
+    const zombieCount = { urban: [2, 5], suburban: [1, 3], rural: [1, 2], shore: [1, 2] };
+
+    for (let y = 0; y < this.HEIGHT; y++) {
+      for (let x = 0; x < this.WIDTH; x++) {
+        const cell = this.grid[y][x];
+        // Keep a 2-cell radius around start clear
+        if (Math.abs(x - startX) + Math.abs(y - startY) <= 2) continue;
+
+        const chance = zombieChance[cell.type] || 0.2;
+        if (Math.random() < chance) {
+          const [min, max] = zombieCount[cell.type] || [1, 2];
+          const count = min + Math.floor(Math.random() * (max - min + 1));
+          for (let i = 0; i < count; i++) {
+            const gender = Math.random() < 0.5 ? 'm' : 'f';
+            const name = H720Data.getRandomName(gender);
+            cell.zombies.push({
+              id: `z_pre_${x}_${y}_${i}`,
+              name: `${name.first} ${name.last}`,
+              str: 6 + Math.floor(Math.random() * 6),
+              dex: 5 + Math.floor(Math.random() * 5),
+              mt: 1,
+              pt: 4 + Math.floor(Math.random() * 5),
+              hp: 10 + Math.floor(Math.random() * 12),
+              mh: 0,
+              zombie: true,
+              weapon: { melee: 5, missile: 0 },
+            });
+          }
+        }
+      }
+    }
   },
 
   _initialTerrain(x, y) {

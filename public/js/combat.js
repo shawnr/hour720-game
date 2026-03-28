@@ -133,9 +133,9 @@ const Combat = {
     const roll = Math.floor(Math.random() * 100);
     if (roll >= noiseRating) return null;
 
-    // 45% zombie, 55% red herring — compressed days mean more encounters
+    // 25% zombie encounter from random events — pre-placed zombies are the main threat
     const typeRoll = Math.random();
-    if (typeRoll < 0.45) {
+    if (typeRoll < 0.25) {
       return { type: 'zombie', message: 'You hear shambling footsteps approaching...' };
     }
 

@@ -201,8 +201,8 @@ const Engine = {
       this._onNewDay(newDay);
     }
 
-    // Periodic events (every ~8 seconds game time — compressed days need more events)
-    if (this.gameTime % 8 === 0) {
+    // Periodic events every ~20 seconds — less spammy, pre-placed zombies do the work
+    if (this.gameTime % 20 === 0) {
       this._periodicTick();
     }
 
@@ -332,8 +332,10 @@ const Engine = {
     // If zombies are present, must roll to escape before moving
     const currentCell = GameMap.getCell(this.playerPos.x, this.playerPos.y);
     if (currentCell && currentCell.zombies.length > 0) {
+      // Roll d20 — must beat: 12 + 3 per zombie - DEX/4
+      // 1 zombie: target ~13 (35% fail), 3 zombies: target ~19 (90% fail)
       const escapeRoll = Math.floor(Math.random() * 20) + 1;
-      const target = 8 + currentCell.zombies.length * 2 - Math.floor(this.character.dex / 3);
+      const target = 12 + currentCell.zombies.length * 3 - Math.floor(this.character.dex / 4);
       if (escapeRoll < target) {
         // Failed to escape — zombie gets a free hit
         const zombie = currentCell.zombies[0];
@@ -360,9 +362,10 @@ const Engine = {
       return false;
     }
 
-    // Outdoor movement costs a small amount of HP (fatigue)
-    this.character.hp = Math.max(1, this.character.hp - 0.5);
-    this.character.mh = Math.max(0, this.character.mh - 0.15);
+    // Outdoor movement costs HP (fatigue) — worse at night
+    const nightPenalty = this.timeOfDay === 'night' ? 1.5 : 1;
+    this.character.hp = Math.max(1, this.character.hp - (1 * nightPenalty));
+    this.character.mh = Math.max(0, this.character.mh - (0.3 * nightPenalty));
 
     this.playerPos = { x: nx, y: ny };
     this.playerLocation = null; // Back outdoors
@@ -379,8 +382,8 @@ const Engine = {
       );
     }
 
-    // Chance of zombie ambush when entering a new area (increases with day)
-    if (cell.zombies.length === 0 && Math.random() < 0.05 + (this.day * 0.01)) {
+    // Small chance of zombie ambush when entering a clear area (increases with day)
+    if (cell.zombies.length === 0 && Math.random() < 0.02 + (this.day * 0.005)) {
       const ambush = Combat.spawnZombies(cell, this.day, this.timeOfDay === 'night');
       if (ambush.length > 0) {
         cell.zombies = cell.zombies.concat(ambush);
@@ -573,8 +576,10 @@ const Engine = {
 
     if (item.health > 0) {
       this.character.hp = Math.min(this.character.maxHp, this.character.hp + item.health);
+      const mhBoost = Math.ceil(item.health / 3);
+      this.character.mh = Math.min(this.character.maxMh, this.character.mh + mhBoost);
       this.character.inventory.splice(itemIdx, 1);
-      this.addEvent('system', `Used ${item.name}. (+${item.health} HP)`);
+      this.addEvent('system', `Used ${item.name}. (+${item.health} HP, +${mhBoost} MH)`);
       return true;
     }
 
@@ -701,13 +706,23 @@ const Engine = {
   },
 
   rest() {
-    // Resting heals a bit but advances time
-    this.gameTime += 30; // 30 seconds = ~1.7 game hours
-    this.character.hp = Math.min(this.character.maxHp, this.character.hp + 2);
-    this.character.mh = Math.min(this.character.maxMh, this.character.mh + 1);
+    // Resting heals more inside buildings, especially secured ones
+    this.gameTime += 30; // 30 seconds = ~7 game hours
+    const inBuilding = !!this.playerLocation?.building;
+    const security = this.playerLocation?.building?.security || 0;
+    const hpGain = inBuilding ? 4 + security : 2;
+    const mhGain = inBuilding ? 2 + Math.floor(security / 2) : 1;
+    this.character.hp = Math.min(this.character.maxHp, this.character.hp + hpGain);
+    this.character.mh = Math.min(this.character.maxMh, this.character.mh + mhGain);
     this.character.sleep = Math.max(0, this.character.sleep - 1);
     this._addNoise(this.NOISE_REST);
-    this.addEvent('system', 'You rest for a while. (+2 HP, +1 MH)');
+    if (inBuilding && security >= 3) {
+      this.addEvent('system', `You rest safely inside the barricades. (+${hpGain} HP, +${mhGain} MH)`);
+    } else if (inBuilding) {
+      this.addEvent('system', `You rest inside. (+${hpGain} HP, +${mhGain} MH)`);
+    } else {
+      this.addEvent('system', 'You rest in the open. Not ideal. (+2 HP, +1 MH)');
+    }
   },
 
   helpNPC(npcId) {
