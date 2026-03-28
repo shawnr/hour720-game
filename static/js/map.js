@@ -281,8 +281,8 @@ const GameMap = {
         const rt = roomTemplates[Math.floor(Math.random() * roomTemplates.length)];
         const room = {
           id: `${bldg.id}_room_${j}`,
-          name: rt.room_name,
-          desc: rt.room_desc,
+          name: this._resolveName(rt.room_name),
+          desc: this._resolveName(rt.room_desc),
           light: rt.room_light,
           cover: rt.room_cover,
           security: rt.room_sec,
