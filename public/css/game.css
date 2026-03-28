@@ -1,0 +1,77 @@
+/* Game-specific style overrides */
+/* Most game styles are in main.css; this file is for runtime tweaks */
+
+.page-game {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Event text fade-in animation matching original JS behavior */
+@keyframes event-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.event-entry {
+  animation: event-fade-in 0.3s ease;
+}
+
+/* Zombie encounter flash */
+@keyframes danger-flash {
+  0%, 100% { border-color: #444; }
+  50% { border-color: var(--danger-red); }
+}
+
+.event-log.danger {
+  animation: danger-flash 0.5s ease 2;
+}
+
+/* NPC interaction highlight */
+.event-entry.npc-needs {
+  border-left: 3px solid var(--accent-green);
+  padding-left: 0.5rem;
+}
+
+/* Day transition overlay */
+.day-transition {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  animation: fade-in-out 3s ease forwards;
+}
+
+.day-transition h2 {
+  font-size: 2rem;
+}
+
+@keyframes fade-in-out {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Action cooldown indicator */
+.action-bar button.cooldown {
+  position: relative;
+  overflow: hidden;
+}
+
+.action-bar button.cooldown::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--text-yellow);
+  animation: cooldown-bar 2s linear forwards;
+}
+
+@keyframes cooldown-bar {
+  from { width: 0; }
+  to { width: 100%; }
+}

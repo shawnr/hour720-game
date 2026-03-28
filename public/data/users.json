@@ -1,0 +1,68 @@
+[
+  {
+    "u_id": 1,
+    "u_name": "shawn",
+    "u_firstName": "Shawn",
+    "u_lastName": "Rider"
+  },
+  {
+    "u_id": 2,
+    "u_name": "steffan",
+    "u_firstName": "Steffan",
+    "u_lastName": "Del Piano"
+  },
+  {
+    "u_id": 3,
+    "u_name": "josephine",
+    "u_firstName": "Josephine",
+    "u_lastName": "Anstey"
+  },
+  {
+    "u_id": 4,
+    "u_name": "sarah",
+    "u_firstName": "Sarah",
+    "u_lastName": "Wichlacz"
+  },
+  {
+    "u_id": 5,
+    "u_name": "marc",
+    "u_firstName": "Marc",
+    "u_lastName": "Bohlen"
+  },
+  {
+    "u_id": 6,
+    "u_name": "loss",
+    "u_firstName": "Loss",
+    "u_lastName": "Glazier"
+  },
+  {
+    "u_id": 7,
+    "u_name": "matt",
+    "u_firstName": "Matt",
+    "u_lastName": "Baldwin"
+  },
+  {
+    "u_id": 8,
+    "u_name": "kevin",
+    "u_firstName": "Kevin",
+    "u_lastName": "Johnson"
+  },
+  {
+    "u_id": 9,
+    "u_name": "aaron",
+    "u_firstName": "Aaron",
+    "u_lastName": "Stanton"
+  },
+  {
+    "u_id": 10,
+    "u_name": "paul",
+    "u_firstName": "Paul",
+    "u_lastName": "Visco"
+  },
+  {
+    "u_id": 11,
+    "u_name": "george",
+    "u_firstName": "George",
+    "u_lastName": "Holomshek"
+  }
+]

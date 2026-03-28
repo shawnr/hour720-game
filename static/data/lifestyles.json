@@ -1,0 +1,156 @@
+[
+  {
+    "lstyle_id": 1,
+    "lstyle_name": "Hunter",
+    "lstyle_desc": "Outdoors types and gun nuts.",
+    "lstyle_str": "+1",
+    "lstyle_dex": "",
+    "lstyle_mt": "",
+    "lstyle_pt": "+1",
+    "lstyle_skill": "4 1",
+    "lstyle_prob": 2
+  },
+  {
+    "lstyle_id": 2,
+    "lstyle_name": "Wealthy",
+    "lstyle_desc": "Independently wealthy.",
+    "lstyle_str": "",
+    "lstyle_dex": "",
+    "lstyle_mt": "",
+    "lstyle_pt": "",
+    "lstyle_skill": "3",
+    "lstyle_prob": 1
+  },
+  {
+    "lstyle_id": 3,
+    "lstyle_name": "Active",
+    "lstyle_desc": "You've never been one to loaf around.",
+    "lstyle_str": "",
+    "lstyle_dex": "",
+    "lstyle_mt": "",
+    "lstyle_pt": "+1",
+    "lstyle_skill": "14",
+    "lstyle_prob": 3
+  },
+  {
+    "lstyle_id": 4,
+    "lstyle_name": "Lazy",
+    "lstyle_desc": "Activities have never really been your thing.",
+    "lstyle_str": "-1",
+    "lstyle_dex": "",
+    "lstyle_mt": "",
+    "lstyle_pt": "-1",
+    "lstyle_skill": "18",
+    "lstyle_prob": 3
+  },
+  {
+    "lstyle_id": 5,
+    "lstyle_name": "Athletic",
+    "lstyle_desc": "More than a weekend-warrior.",
+    "lstyle_str": "+1",
+    "lstyle_dex": "",
+    "lstyle_mt": "",
+    "lstyle_pt": "+1",
+    "lstyle_skill": "6 9",
+    "lstyle_prob": 3
+  },
+  {
+    "lstyle_id": 6,
+    "lstyle_name": "Techie",
+    "lstyle_desc": "Computer programmers and hackers.",
+    "lstyle_str": "",
+    "lstyle_dex": "",
+    "lstyle_mt": "+1",
+    "lstyle_pt": "",
+    "lstyle_skill": "16",
+    "lstyle_prob": 3
+  },
+  {
+    "lstyle_id": 7,
+    "lstyle_name": "Gourmet",
+    "lstyle_desc": "Wine afficianatos and food gurus.",
+    "lstyle_str": "",
+    "lstyle_dex": "",
+    "lstyle_mt": "",
+    "lstyle_pt": "",
+    "lstyle_skill": "19",
+    "lstyle_prob": 1
+  },
+  {
+    "lstyle_id": 8,
+    "lstyle_name": "Tinkerer",
+    "lstyle_desc": "Handy-men.",
+    "lstyle_str": "",
+    "lstyle_dex": "",
+    "lstyle_mt": "+1",
+    "lstyle_pt": "",
+    "lstyle_skill": "21 17 20",
+    "lstyle_prob": 2
+  },
+  {
+    "lstyle_id": 9,
+    "lstyle_name": "Rough and Tumble",
+    "lstyle_desc": "Bar fights.  Random scraps.  A broken nose or two.  Maybe your own--every so often.  Just shake it off.",
+    "lstyle_str": "+2",
+    "lstyle_dex": "",
+    "lstyle_mt": "",
+    "lstyle_pt": "",
+    "lstyle_skill": "22 2 3",
+    "lstyle_prob": 3
+  },
+  {
+    "lstyle_id": 10,
+    "lstyle_name": "Volunteer",
+    "lstyle_desc": "Volunteer EMTs, Firemen, or church goers.",
+    "lstyle_str": "",
+    "lstyle_dex": "",
+    "lstyle_mt": "",
+    "lstyle_pt": "",
+    "lstyle_skill": "24 23 11",
+    "lstyle_prob": 2
+  },
+  {
+    "lstyle_id": 11,
+    "lstyle_name": "Artstic",
+    "lstyle_desc": "Your an artsy-fartsy type who'd rather see a film than go the movies, rather go to the theater than see a film, rather go to the museum than the game, rather read a book than watch television.",
+    "lstyle_str": "",
+    "lstyle_dex": "",
+    "lstyle_mt": "",
+    "lstyle_pt": "",
+    "lstyle_skill": "27 28 29 25",
+    "lstyle_prob": 2
+  },
+  {
+    "lstyle_id": 12,
+    "lstyle_name": "Intellectual",
+    "lstyle_desc": "A lover of information and ideas more than anything.",
+    "lstyle_str": "",
+    "lstyle_dex": "",
+    "lstyle_mt": "+1",
+    "lstyle_pt": "",
+    "lstyle_skill": "32 27 33 34",
+    "lstyle_prob": 1
+  },
+  {
+    "lstyle_id": 13,
+    "lstyle_name": "Faithful",
+    "lstyle_desc": "Thsoe of the spirtual lifestyle are known not to falter.",
+    "lstyle_str": "",
+    "lstyle_dex": "",
+    "lstyle_mt": "+2",
+    "lstyle_pt": "",
+    "lstyle_skill": "24 33 34",
+    "lstyle_prob": 2
+  },
+  {
+    "lstyle_id": 14,
+    "lstyle_name": "Handy",
+    "lstyle_desc": "A good hand to have around the house.",
+    "lstyle_str": "",
+    "lstyle_dex": "+1",
+    "lstyle_mt": "",
+    "lstyle_pt": "",
+    "lstyle_skill": "21 20 36",
+    "lstyle_prob": 2
+  }
+]

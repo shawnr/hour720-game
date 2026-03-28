@@ -1,0 +1,15 @@
+baseURL = '/'
+languageCode = 'en-us'
+title = 'Hour 720 — Archival Simulation'
+relativeURLs = true
+uglyURLs = false
+
+[params]
+  description = 'An archival simulation of Hour 720, a text-based zombie survival MMO created as an MFA thesis by Shawn Rider (2005-2006).'
+  author = 'Shawn Rider'
+  gameVersion = '1.0.0'
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true

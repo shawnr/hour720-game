@@ -1,0 +1,193 @@
+{{ define "bodyclass" }}page-game{{ end }}
+
+{{ define "head" }}
+<link rel="stylesheet" href="{{ "css/game.css" | relURL }}">
+{{ end }}
+
+{{ define "main" }}
+<!-- Screens are toggled via JS -->
+
+<!-- Save/Load Screen -->
+<div id="screen-saves" class="save-load-screen hidden">
+  <h1>Hour 720</h1>
+  <p class="text-center mb-2">Choose a saved game or start fresh.</p>
+  <ul id="save-list" class="save-list"></ul>
+  <button id="btn-new-game" class="btn-play" style="width:100%; margin-top:1rem;">New Game</button>
+  <p class="text-center mt-2"><a href="{{ "/" | relURL }}">Back to About</a></p>
+</div>
+
+<!-- Character Creation Screen -->
+<div id="screen-chargen" class="char-create hidden">
+  <h1>Create Your Survivor</h1>
+  <div class="char-sheet">
+    <div class="name-input-group">
+      <input type="text" id="char-name-input" placeholder="Your name" maxlength="24">
+      <button class="btn-reroll" id="btn-reroll-name" title="Random name">New Name</button>
+    </div>
+
+    <div class="char-detail" id="char-details">
+      <dt>Profession</dt><dd id="cd-profession">—</dd>
+      <dt>Age</dt><dd id="cd-age">—</dd>
+      <dt>Gender</dt><dd id="cd-gender">—</dd>
+      <dt>Body Type</dt><dd id="cd-bodytype">—</dd>
+      <dt>Lifestyle</dt><dd id="cd-lifestyle">—</dd>
+      <dt>Skills</dt><dd id="cd-skills">—</dd>
+    </div>
+
+    <div class="char-stats-grid" id="char-stats">
+      <div class="stat-box"><div class="stat-name">STR</div><div class="stat-num" id="cs-str">—</div></div>
+      <div class="stat-box"><div class="stat-name">DEX</div><div class="stat-num" id="cs-dex">—</div></div>
+      <div class="stat-box"><div class="stat-name">MT</div><div class="stat-num" id="cs-mt">—</div></div>
+      <div class="stat-box"><div class="stat-name">PT</div><div class="stat-num" id="cs-pt">—</div></div>
+    </div>
+
+    <div style="display:flex; gap:0.5rem; justify-content:space-between; margin-top:0.5rem;">
+      <div>
+        <span class="text-muted" style="font-size:0.8rem;">HP</span>
+        <span id="cs-hp" class="text-green" style="font-family:var(--font-mono);">—</span>
+      </div>
+      <div>
+        <span class="text-muted" style="font-size:0.8rem;">MH</span>
+        <span id="cs-mh" style="color:var(--mental-blue); font-family:var(--font-mono);">—</span>
+      </div>
+    </div>
+
+    <button class="btn-reroll" id="btn-reroll-char" style="width:100%; margin-top:1rem;">Re-Roll Character</button>
+  </div>
+  <button class="btn-start" id="btn-start-game">Enter New Hampton</button>
+</div>
+
+<!-- Main Game Screen -->
+<div id="screen-game" class="game-container hidden">
+  <header class="game-header">
+    <div class="logo">
+      <img src="{{ "img/h720_logo_90pxHigh.gif" | relURL }}" alt="H720">
+    </div>
+    <div class="game-clock">
+      <span id="game-day">Day 1</span> &mdash; <span id="game-time">06:00</span>
+    </div>
+    <div class="game-menu">
+      <button id="btn-radio">Radio</button>
+      <button id="btn-save">Save</button>
+      <button id="btn-menu">Menu</button>
+    </div>
+  </header>
+
+  <aside class="game-sidebar-left">
+    <div class="map-container">
+      <h4 class="text-yellow mb-1">New Hampton</h4>
+      <div class="map-grid" id="map-grid"></div>
+    </div>
+    <div class="nav-compass" id="nav-compass">
+      <button disabled></button>
+      <button id="nav-n">N</button>
+      <button disabled></button>
+      <button id="nav-w">W</button>
+      <button class="center-cell" id="nav-here">&bull;</button>
+      <button id="nav-e">E</button>
+      <button disabled></button>
+      <button id="nav-s">S</button>
+      <button disabled></button>
+    </div>
+    <div class="toolbox" id="toolbox">
+      <button id="tool-map" title="Map"><img src="{{ "img/icons/map.png" | relURL }}" alt="Map"></button>
+      <button id="tool-pack" title="Inventory"><img src="{{ "img/icons/pack.png" | relURL }}" alt="Pack"></button>
+      <button id="tool-search" title="Search"><img src="{{ "img/icons/search.png" | relURL }}" alt="Search"></button>
+      <button id="tool-radio" title="Radio"><img src="{{ "img/icons/radio.png" | relURL }}" alt="Radio"></button>
+      <button id="tool-secure" title="Secure"><img src="{{ "img/icons/secure.png" | relURL }}" alt="Secure"></button>
+    </div>
+    <div class="inventory-panel">
+      <h4>Inventory</h4>
+      <ul class="inventory-list" id="inventory-list">
+        <li class="text-muted">Empty</li>
+      </ul>
+    </div>
+  </aside>
+
+  <main class="game-main">
+    <div class="location-info" id="location-info">
+      <div class="loc-name" id="loc-name">—</div>
+      <div class="loc-type" id="loc-type">—</div>
+      <div class="loc-desc" id="loc-desc"></div>
+    </div>
+    <div class="event-log" id="event-log"></div>
+    <div class="action-bar" id="action-bar">
+      <button id="act-search">Search</button>
+      <button id="act-enter">Enter</button>
+      <button id="act-secure">Secure</button>
+      <button id="act-rest">Rest</button>
+      <button id="act-use">Use Item</button>
+      <button id="act-attack">Attack</button>
+    </div>
+  </main>
+
+  <aside class="game-sidebar-right">
+    <div class="char-icon" id="char-icon"></div>
+    <div class="char-name" id="game-char-name">—</div>
+    <div class="char-profession" id="game-char-prof">—</div>
+
+    <div class="stat-group">
+      <h4>Health</h4>
+      <div class="stat-row"><span class="stat-label">HP</span><span class="stat-value" id="game-hp">—</span></div>
+      <div class="health-bar"><div class="fill hp" id="hp-bar" style="width:100%"></div></div>
+      <div class="stat-row mt-1"><span class="stat-label">MH</span><span class="stat-value" id="game-mh">—</span></div>
+      <div class="health-bar"><div class="fill mh" id="mh-bar" style="width:100%"></div></div>
+    </div>
+
+    <div class="stat-group">
+      <h4>Attributes</h4>
+      <div class="stat-row"><span class="stat-label">STR</span><span class="stat-value" id="game-str">—</span></div>
+      <div class="stat-row"><span class="stat-label">DEX</span><span class="stat-value" id="game-dex">—</span></div>
+      <div class="stat-row"><span class="stat-label">MT</span><span class="stat-value" id="game-mt">—</span></div>
+      <div class="stat-row"><span class="stat-label">PT</span><span class="stat-value" id="game-pt">—</span></div>
+    </div>
+
+    <div class="stat-group">
+      <h4>Conditions</h4>
+      <div id="game-conditions" class="text-muted" style="font-size:0.8rem;">None</div>
+    </div>
+
+    <div class="stat-group">
+      <h4>Nearby</h4>
+      <div id="game-nearby" class="text-muted" style="font-size:0.8rem;">Nothing</div>
+    </div>
+  </aside>
+
+  <footer class="game-footer">
+    Hour 720 &mdash; Archival Simulation
+  </footer>
+</div>
+
+<!-- End Screen -->
+<div id="screen-end" class="end-screen hidden">
+  <h1>Hour 720</h1>
+  <div class="outcome" id="end-outcome"></div>
+  <div class="end-report" id="end-report"></div>
+  <div class="text-center mt-2">
+    <button class="btn-play" id="btn-play-again">Play Again</button>
+    <p class="mt-1"><a href="{{ "/" | relURL }}">Back to About</a></p>
+  </div>
+</div>
+
+<!-- Radio Overlay -->
+<div id="radio-overlay" class="radio-overlay hidden">
+  <div class="radio-panel">
+    <h3 id="radio-title">Radio</h3>
+    <div class="station-name" id="radio-station"></div>
+    <div class="broadcast-text" id="radio-text"></div>
+    <button id="radio-close">Close</button>
+  </div>
+</div>
+{{ end }}
+
+{{ define "scripts" }}
+<script src="{{ "js/data.js" | relURL }}"></script>
+<script src="{{ "js/chargen.js" | relURL }}"></script>
+<script src="{{ "js/map.js" | relURL }}"></script>
+<script src="{{ "js/combat.js" | relURL }}"></script>
+<script src="{{ "js/npc.js" | relURL }}"></script>
+<script src="{{ "js/radio.js" | relURL }}"></script>
+<script src="{{ "js/saves.js" | relURL }}"></script>
+<script src="{{ "js/engine.js" | relURL }}"></script>
+<script src="{{ "js/game.js" | relURL }}"></script>
+{{ end }}

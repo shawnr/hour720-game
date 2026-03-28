@@ -1,0 +1,202 @@
+[
+  {
+    "jc_id": 1,
+    "jc_name": "Law Enforcement",
+    "jc_additional": "3",
+    "jc_primary": "1 2",
+    "jc_secondary": "1 2",
+    "jc_description": "Law enforcement includes all non-military security personnel: police, sherriff, security guard, night watchman, etc.",
+    "jc_numSec": 2,
+    "jc_numAdd": 1
+  },
+  {
+    "jc_id": 2,
+    "jc_name": "Military",
+    "jc_additional": "2",
+    "jc_primary": "3",
+    "jc_secondary": "4 1",
+    "jc_description": "Military personnel.",
+    "jc_numSec": 2,
+    "jc_numAdd": 1
+  },
+  {
+    "jc_id": 3,
+    "jc_name": "Reporter",
+    "jc_additional": "1",
+    "jc_primary": "4",
+    "jc_secondary": "3",
+    "jc_description": "A journalist working for some media outlet who has come to show off the horror of what's happening on the island.",
+    "jc_numSec": 1,
+    "jc_numAdd": 1
+  },
+  {
+    "jc_id": 4,
+    "jc_name": "Office Worker",
+    "jc_additional": "13 9 33 34 3",
+    "jc_primary": "4",
+    "jc_secondary": "2",
+    "jc_description": "Cubicle monkeys",
+    "jc_numSec": 1,
+    "jc_numAdd": 1
+  },
+  {
+    "jc_id": 5,
+    "jc_name": "Restaurant",
+    "jc_additional": "3",
+    "jc_primary": "4",
+    "jc_secondary": "4 1",
+    "jc_description": "Food service jobs.",
+    "jc_numSec": 2,
+    "jc_numAdd": 1
+  },
+  {
+    "jc_id": 6,
+    "jc_name": "Official",
+    "jc_additional": "2 4",
+    "jc_primary": "2",
+    "jc_secondary": "4 5",
+    "jc_description": "Low and high level governement officials.",
+    "jc_numSec": 1,
+    "jc_numAdd": 1
+  },
+  {
+    "jc_id": 7,
+    "jc_name": "Public Works",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "City workers of all types: garbage men, gas/electric workers etc.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 8,
+    "jc_name": "EMT",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "EMT workers both paid and volunteer.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 9,
+    "jc_name": "Firefighter",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "A member of the island's fire department, both paid and volunteer.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 10,
+    "jc_name": "Laborer",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "Construction workers, handy-(wo)men, repair men and women.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 11,
+    "jc_name": "Clergy",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 12,
+    "jc_name": "Medical",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "Med. Students, doctors of all kinds, therapists, and nurses.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 13,
+    "jc_name": "Delivery Service",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "Pizzas, flowers, packages...people deliver all sorts of things.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 14,
+    "jc_name": "Education",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "Professors, teachers, and students.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 15,
+    "jc_name": "Unemployed Adult",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "In between jobs right at the moment.  Basement staying slackers.  Guys who crash on buddies couches.  The over-qualified and PhDs.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 16,
+    "jc_name": "Unemployed Youth",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "Life sucks when you have a job.  Plus, going to school takes up most of your time.  And after clubs and sports...whose got time for a job?",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 17,
+    "jc_name": "Retiree",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "In a past life you worked but now you're just enjoying your time to yourself.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 19,
+    "jc_name": "Homemaker",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "Stay-at-home moms and dads.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 20,
+    "jc_name": "Felon",
+    "jc_additional": "",
+    "jc_primary": "",
+    "jc_secondary": "",
+    "jc_description": "In and out of the island's penetentary.",
+    "jc_numSec": 0,
+    "jc_numAdd": 0
+  },
+  {
+    "jc_id": 21,
+    "jc_name": "Librarian",
+    "jc_additional": "40 6 42 46 36",
+    "jc_primary": "16 28 29 31",
+    "jc_secondary": "21 27 33 34 30 15 48 47",
+    "jc_description": "One who curates and manages collections of books and media.",
+    "jc_numSec": 3,
+    "jc_numAdd": 1
+  }
+]
